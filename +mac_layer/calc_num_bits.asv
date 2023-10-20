@@ -1,0 +1,54 @@
+function [num_t_field_bits,num_b_field_bits] = configuration_to_mod(mac_meta)
+    % calculate the bits according to the configuration
+    % switch case is not optimal, however i am too lazy to calculate the
+    % bits via the symbol rates at the moment
+
+
+    % assumed that E/U mux is in U mode
+        switch mac_meta.configuration
+            case '1a'
+                a_field_bits_per_symbol = 1;
+                a_field_modulation = 'GFSK';
+                b_z_field_bits_per_symbol = 1;
+                b_z_field_modulation = 'GFSK';
+            case '1b'
+                a_field_bits_per_symbol = 1;
+                a_field_modulation = 'pi/2-DBPSK';
+                b_z_field_bits_per_symbol = 1;
+            case '2'
+                a_field_bits_per_symbol = 1;
+                a_field_modulation = 'pi/2-DBPSK';
+                b_z_field_bits_per_symbol = 2;
+            case '2b'
+                a_field_bits_per_symbol = 1;
+                a_field_modulation = 'pi/2-DBPSK';
+                b_z_field_bits_per_symbol = 2;
+            case '3'
+                a_field_bits_per_symbol = 1;
+                a_field_modulation = 'pi/2-DBPSK';
+                b_z_field_bits_per_symbol = 3;
+            case '3b'
+                a_field_bits_per_symbol = 1;
+                a_field_modulation = 'pi/2-DBPSK';
+                b_z_field_bits_per_symbol = 3;
+            case '4a'
+                a_field_bits_per_symbol = 2;
+                a_field_modulation = 'pi/4-DQPSK';
+                b_z_field_bits_per_symbol = 2;
+            case '4b'
+                a_field_bits_per_symbol = 3;
+                a_field_modulation = 'pi/8-D8PSK';
+                b_z_field_bits_per_symbol = 3;
+            case '5'
+                a_field_bits_per_symbol = 1;
+                a_field_modulation = 'pi/2-DBPSK';
+                b_z_field_bits_per_symbol = 4;
+            case '6'
+                a_field_bits_per_symbol = 1;
+                a_field_modulation = 'pi/2-DBPSK';
+                b_z_field_bits_per_symbol = 6;
+        end
+
+
+
+end
