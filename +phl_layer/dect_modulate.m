@@ -1,0 +1,49 @@
+function [samples_tx] = dect_modulate(packet_data,mod_scheme)
+
+% modulate data in s-field
+
+switch mod_scheme.s_field_modulation
+    case 'GFSK'
+        s_field_Mod = comm.CPMModulator( ...
+        'ModulationOrder',2, ...
+        'FrequencyPulse','Gaussian', ...
+        'BandwidthTimeProduct',0.5, ...
+        'ModulationIndex',1, ...
+        'BitInput',true);
+    case 'pi/2-DBPSK'
+        error('not implemeted yet')
+end
+s_field_data_samples = s_field_Mod(packet_data{1});
+
+switch mod_scheme.a_field_modulation
+    case 'GFSK'
+        a_field_Mod = comm.CPMModulator( ...
+        'ModulationOrder',2^mod_scheme.a_field_bits_per_symbol, ...
+        'FrequencyPulse','Gaussian', ...
+        'BandwidthTimeProduct',0.5, ...
+        'ModulationIndex',1, ...
+        'BitInput',true);
+    otherwise
+        error('not implemeted yet')
+end
+
+a_field_data_samples = a_field_Mod(packet_data{2});
+
+switch mod_scheme.b_z_field_modulation
+    case 'GFSK'
+        b_z_field_Mod = comm.CPMModulator( ...
+        'ModulationOrder',2^mod_scheme.a_field_bits_per_symbol, ...
+        'FrequencyPulse','Gaussian', ...
+        'BandwidthTimeProduct',0.5, ...
+        'ModulationIndex',1, ...
+        'BitInput',true);
+    otherwise
+        error('not implemeted yet')
+end
+
+b_z_field_data_samples = b_z_field_Mod(packet_data{3});
+
+samples_tx = [s_field_data_samples; a_field_data_samples;b_z_field_data_samples];
+
+
+end

@@ -1,4 +1,6 @@
-function [scramb_seq_cell] = scramb_seq(tdma_frame_num, n_bits_b_field)
+function [scrambled_data] = scramble_b_field(tdma_frame_num, b_field_bits)
+
+n_bits_b_field = numel(b_field_bits);
 
 
 % Check if Frame number is correct
@@ -6,7 +8,8 @@ if tdma_frame_num < 0 || tdma_frame_num > 7
     error('tdma_frame_no has to be between 0 and 7')
 end
 
-scramb_seq_cell = cell(1);
+
+% calculate scrambling sequence according to p. 101 MAC Layer
 
 % initiate the shift register according to Frame number
 f_str = dec2bin(tdma_frame_num);
@@ -19,12 +22,13 @@ switch numel(f)
     case 1
         f = [0 0 f(1:end)];
 end
-
+f = flip(f);
 q = [f 1 1];
 
-scramb_seq = zeros(248,1);     % sequence is 248 bits long
+
+scramb_seq = zeros(n_bits_b_field,1);     % sequence is 248 bits long
 inversion_mechanism_flag = 1;
-for i=1:248
+for i=1:n_bits_b_field
     if inversion_mechanism_flag == 0
         scramb_seq(i) = q(end);
     else
@@ -37,18 +41,8 @@ for i=1:248
     q = circshift(q,1);
     q(1) = q_xor;
 end
-
-num_of_seq = floor(n_bits_b_field/numel(scramb_seq));
-num_of_seq_mod = mod(n_bits_b_field,num_of_seq*numel(scramb_seq));
-
-scramb_seq_b_field = repmat(scramb_seq, num_of_seq);
-scramb_seq_b_field = reshape(scramb_seq_b_field,[],1);
-scramb_seq_mod = scramb_seq(1:num_of_seq_mod);
-scramb_seq_b_field = [scramb_seq_b_field; scramb_seq_mod];
-
-
-scramb_seq_cell{1} = scramb_seq_b_field;
-
+ 
+scrambled_data = xor(scramb_seq, b_field_bits);
 
 end
 

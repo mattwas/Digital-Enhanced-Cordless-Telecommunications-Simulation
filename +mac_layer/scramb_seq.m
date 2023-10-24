@@ -1,4 +1,6 @@
-function [scramb_seq] = scramb_seq(tdma_frame_num, n_bits_b_field)
+function [scrambled_data] = scramb_seq(tdma_frame_num, b_field_bits)
+
+n_bits_b_field = numel(b_field_bits);
 
 
 % Check if Frame number is correct
@@ -40,7 +42,7 @@ for i=1:n_bits_b_field
     q(1) = q_xor;
 end
  
-
+scrambled_data = xor(scramb_seq, b_field_bits);
 
 end
 
