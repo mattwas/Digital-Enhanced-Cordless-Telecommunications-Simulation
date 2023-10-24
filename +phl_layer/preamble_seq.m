@@ -1,21 +1,21 @@
-function [sync_seq_out] = preamble_seq(mac_meta, transmission_type)
-% create the preamble sequence according to standard
+function [preamble_samples] = preamble_seq(mac_meta, transmission_type)
+    sync_bits = phl_layer.preamble_seq_bits(mac_meta,transmission_type);
+    
+    mod_scheme = mac_layer.configuration_to_mod_scheme(mac_meta);
 
-if mac_meta.s == 0
-    % standard preamble
-    if transmission_type == "RFP"
-        sync_seq = [1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 1; 1; 0; 1; 0; 0; 1; 1; 0; 0; 0; 1; 0; 1; 0];
-    elseif transmission_type == "PP"
-        sync_seq = [0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 1; 0; 0; 0; 1; 0; 1; 1; 0; 0; 1; 1; 1; 0; 1; 0; 1];
-    else
-        error('transmission type not defined')
+    switch mod_scheme.s_field_modulation
+        case 'GFSK'
+            s_field_Mod = comm.CPMModulator( ...
+            'ModulationOrder',2, ...
+            'FrequencyPulse','Gaussian', ...
+            'BandwidthTimeProduct',0.5, ...
+            'ModulationIndex',mod_index, ...
+            'BitInput',true, ...
+            'SamplesPerSymbol',samples_per_symbol);
+        case 'pi/2-DBPSK'
+            error('not implemeted yet')
     end
-elseif mac_meta.s == 16
-    % prolonged
-    error('prolonged preamble not implemented yet')
-else
-    error('parameter s not defined');
-end
 
-sync_seq_out = sync_seq;
+    preamble_samples = s_field_Mod(sync_bits);
+
 end

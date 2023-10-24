@@ -6,8 +6,8 @@ classdef dect_tx < handle
 
     methods
         function obj = dect_tx()
-            obj.mac_meta = struct('Configuration','1a','a', '32', 'K',0,'L', 0, 'M', 0,'N', 1, 's', 0, 'z', 0);
-            obj.packet_data = [];
+            obj.mac_meta = struct('Configuration','1a','a', '32', 'K',0,'L', 0, 'M', 0,'N', 1, 's', 0, 'z', 0,'Oversampling',1);
+            obj.packet_data = general.set_general_params(obj.mac_meta);
 
         end
     end
@@ -39,13 +39,16 @@ classdef dect_tx < handle
 
             % PHL Layer
 
-            s_field_bits = phl_layer.preamble_seq(mac_meta_arg,"RFP");
-            packet_data = cell(3,1);
-            packet_data{1} = s_field_bits;
-            packet_data{2} = a_field_bits;
-            packet_data{3} = b_x_field_bits;
+            s_field_bits = phl_layer.preamble_seq_bits(mac_meta_arg,"RFP");
+            z_field_bits = phl_layer.set_z_field(b_x_field_bits,mac_meta_arg);
 
-            samples_tx = phl_layer.dect_modulate(packet_data, mod_scheme_struct);
+            packet_data_bits = cell(3,1);
+            packet_data_bits{1} = s_field_bits;
+            packet_data_bits{2} = a_field_bits;
+            packet_data_bits{3} = [b_x_field_bits; z_field_bits];
+
+            [samples_tx, SamplingRate] = phl_layer.dect_modulate(packet_data_bits, mod_scheme_struct,mac_meta_arg);
+            obj.packet_data.SamplingRate = SamplingRate;
             
             
 
