@@ -7,7 +7,7 @@ classdef dect_tx < handle
     methods
         function obj = dect_tx()
             obj.mac_meta = struct('Configuration','1a','a', '32', 'K',0,'L', 0, 'M', 0,'N', 1, 's', 0, 'z', 0,'Oversampling',1);
-            obj.packet_data = general.set_general_params(obj.mac_meta);
+            obj.packet_data = general.get_general_params(obj.mac_meta);
 
         end
     end
@@ -16,7 +16,7 @@ classdef dect_tx < handle
         function [samples_tx] = generate_packet(obj)
             mac_meta_arg = obj.mac_meta;
 
-            mod_scheme_struct = mac_layer.configuration_to_mod_scheme(mac_meta_arg);
+            mod_scheme_struct = general.configuration_to_mod_scheme(mac_meta_arg);
             [num_t_field_bits, num_b_field_bits, num_x_field_bits] = mac_layer.calc_num_bits(mac_meta_arg,mod_scheme_struct);
 
 
@@ -33,8 +33,10 @@ classdef dect_tx < handle
 
             % scramble B-Field and add XCRC and RCRC
             a_field_bits = mac_layer.calc_rcrc(a_field_h_t_bits);
+            obj.packet_data.a_field_bits = a_field_bits;
             b_field_bits_scrambled = mac_layer.scramble_b_field(0,b_field_bits);
             b_x_field_bits = mac_layer.calc_xcrc(b_field_bits_scrambled, mod_scheme_struct);
+            obj.packet_data.b_x_field_bits = b_x_field_bits;
 
 
             % PHL Layer

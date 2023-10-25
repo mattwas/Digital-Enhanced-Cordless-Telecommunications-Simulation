@@ -5,22 +5,30 @@ classdef dect_rx < handle
     properties
             mac_meta
             packet_data;
+            synchronisation;
     end
 
     methods
         function obj = dect_rx()
             obj.mac_meta = struct('Configuration','1a','a', '32', 'K',0,'L', 0, 'M', 0,'N', 1, 's', 0, 'z', 0,'Oversampling',1, "transmission_type", "RFP");
-            obj.packet_data = general.set_general_params(obj.mac_meta);
+            obj.packet_data = general.get_general_params(obj.mac_meta);
+            obj.synchronisation = [];
 
         end
     end
 
     methods 
         
-        function outputArg = decode_packet(obj,samples)
+        function [r_crc_correct, x_crc_correct] = decode_packet(obj,samples_rx)
             mac_meta_arg = obj.mac_meta;
             packet_data_arg = obj.packet_data;
-            packet_start_idx = phl_layer.sync(mac_meta_arg,samples);
+            [synced_samples, packet_start_idx] = phl_layer.sync(mac_meta_arg,samples_rx);
+            obj.synchronisation.packet_start = packet_start_idx;
+            [a_field_bits_rv, b_z_field_bits_rv] = phl_layer.dect_demodulate(synced_samples,mac_meta_arg);
+            [b_field_bits_rv] = phl_layer.remove_z_field(b_z_field_bits_rv,mac_meta_arg);
+            [h_and_t_bits_rv, error_r_crc] = mac_layer.check_rcrc(a_field_bits_rv);
+            [b_bits_data_rv, error_x_crc] = mac_layer.check_xcrc(b_field_bits_rv,mac_meta_arg);
+
 
 
         end
