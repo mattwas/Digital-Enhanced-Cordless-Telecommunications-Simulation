@@ -16,12 +16,9 @@ function [samples_after_sync, start_of_packet] = sync(mac_meta, toggle, samples)
         samples_after_sync = samples(start_of_packet:end);
 
     elseif toggle == 0
-        preamble_samples = phl_layer.preamble_seq(mac_meta, mac_meta.transmission_type);
-        start_of_packet = numel(preamble_samples)+1;
-        samples_after_sync = samples(start_of_packet:end);
         
     else
-        error('not defined synchronisation toggle')
+        error('toggle not compli')
     end
     
 end
