@@ -11,4 +11,39 @@ mac_meta.N = 1;          % Radio fixed Part Number (RPN)
 mac_meta.s = 0;          % synchronization field (0 = normal length, 1 = prolonged)   
 mac_meta.z = 0;          % z-field indicator, for coliision detection (0 = no Z field, 1 = Z Field active)
 
-%% Setup Transmitter 
+tx = dect_tx();
+rx = dect_rx(tx.mac_meta, 1);
+
+samples_tx = tx.generate_packet();
+ch                      = rf_channel();
+ch.verbose              = 0;
+ch.verbose_cp           = 0;
+ch.type                 = 'rician';
+ch.amp                  = 1.0;
+ch.noise                = true;
+ch.snr_db             	= 20;
+ch.spectrum_occupied    = 1;
+ch.N_TX                	= 1;
+ch.N_RX               	= 1;
+ch.awgn_random_source   = 'global';
+ch.awgn_randomstream 	= RandStream('mt19937ar','Seed', randi(1e9,[1 1]));
+ch.d_sto                = 0;
+ch.d_cfo               	= 0;
+ch.d_err_phase         	= 0;
+ch.r_random_source      = 'global';
+ch.r_seed    	        = randi(1e9,[1 1]);
+ch.r_sto                = 0;
+ch.r_cfo                = 0;
+ch.r_err_phase          = 0;
+ch.r_samp_rate        	= tx.packet_data.SamplingRate;
+ch.r_max_doppler     	= 1.946;                            % 1.946 19.458
+ch.r_type   	        = 'TDL-v';
+ch.r_DS_desired         = 10^(-7.03 + 0.00*randn(1,1));
+ch.r_K                  = db2pow(9.0 + 0.00*randn(1,1));    %93e-9;
+ch.r_interpolation      = true;
+ch.r_gains_active 	    = true;
+ch.init_rayleigh_rician_channel();
+
+samples_rx = ch.pass_samples(samples_tx,0);
+
+[rcrc, xcrc] = rx.decode_packet(samples_rx);
