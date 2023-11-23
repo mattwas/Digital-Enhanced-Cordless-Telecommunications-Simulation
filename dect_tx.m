@@ -6,7 +6,7 @@ classdef dect_tx < handle
 
     methods
         function obj = dect_tx()
-            obj.mac_meta = struct('Configuration','1a','a', '32', 'K',0,'L', 0, 'M', 0,'N', 1, 's', 0, 'z', 0,'Oversampling',1, "transmission_type", "RFP");
+            obj.mac_meta = struct('Configuration','4b','a', '32', 'K',0,'L', 0, 'M', 0,'N', 1, 's', 0, 'z', 0,'Oversampling',1, "transmission_type", "RFP");
             obj.packet_data = general.get_general_params(obj.mac_meta);
             
 
@@ -40,7 +40,6 @@ classdef dect_tx < handle
 
 
             % PHL Layer
-
             s_field_bits = phl_layer.preamble_seq_bits(mac_meta_arg,"RFP");
             z_field_bits = phl_layer.set_z_field(b_x_field_bits,mac_meta_arg);
 

@@ -1,4 +1,4 @@
-function [samples_after_sync, start_of_packet] = sync(mac_meta, toggle, samples)
+function [start_of_packet] = sync(mac_meta, toggle, samples)
 % Synchronisation function for the Receiver. Output is the the Start of the
 % modulated A-Field
     if toggle == 1
@@ -16,9 +16,11 @@ function [samples_after_sync, start_of_packet] = sync(mac_meta, toggle, samples)
         samples_after_sync = samples(start_of_packet:end);
 
     elseif toggle == 0
-        preamble_samples = phl_layer.preamble_seq(mac_meta, mac_meta.transmission_type);
-        start_of_packet = numel(preamble_samples)+1;
-        samples_after_sync = samples(start_of_packet:end);
+        % preamble_samples = phl_layer.preamble_seq(mac_meta, mac_meta.transmission_type);
+        % start_of_packet = numel(preamble_samples)+1;
+        % samples_after_sync = samples(start_of_packet:end);
+        samples_after_sync = samples;
+        start_of_packet = 1;
         
     else
         error('not defined synchronisation toggle')

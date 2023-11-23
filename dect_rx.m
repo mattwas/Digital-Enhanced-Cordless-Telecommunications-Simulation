@@ -22,9 +22,9 @@ classdef dect_rx < handle
         function [rcrc_correct, xcrc_correct] = decode_packet(obj,samples_rx)
             mac_meta_arg = obj.mac_meta;
             synchronisation_toggle = obj.synchronisation.toggle;
-            [synced_samples, packet_start_idx] = phl_layer.sync(mac_meta_arg,synchronisation_toggle,samples_rx);
+            [packet_start_idx] = phl_layer.sync(mac_meta_arg,synchronisation_toggle,samples_rx);
             obj.synchronisation.packet_start = packet_start_idx;
-            [a_field_bits_rv, b_z_field_bits_rv] = phl_layer.dect_demodulate(synced_samples,mac_meta_arg);
+            [a_field_bits_rv, b_z_field_bits_rv] = phl_layer.dect_demodulate(samples_rx,mac_meta_arg, obj.synchronisation);
             obj.packet_data.a_field_bits_rv = a_field_bits_rv;
             obj.packet_data.b_z_field_bits_rv = b_z_field_bits_rv;
             if ~isequal(a_field_bits_rv,0) && ~isequal(b_z_field_bits_rv,0)

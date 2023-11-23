@@ -51,7 +51,7 @@ function [mod_struct] = configuration_to_mod_scheme(mac_meta)
                 a_field_bits_per_symbol = 3;
                 a_field_modulation = 'pi/8-D8PSK';
                 b_z_field_bits_per_symbol = 3;
-                b_z_field_modulation = 'pi/8-DBPSK';
+                b_z_field_modulation = 'pi/8-D8PSK';
             case '5'
                 s_field_modulation = 'pi/2-DBPSK';
                 a_field_bits_per_symbol = 1;
@@ -64,6 +64,9 @@ function [mod_struct] = configuration_to_mod_scheme(mac_meta)
                 a_field_modulation = 'pi/2-DBPSK';
                 b_z_field_bits_per_symbol = 6;
                 b_z_field_modulation = '64-QAM';
+
+            otherwise
+                error("invalid Configuration selected!");
         end
 
         mod_struct.s_field_modulation = s_field_modulation;
