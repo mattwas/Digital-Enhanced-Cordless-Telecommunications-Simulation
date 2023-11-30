@@ -6,7 +6,7 @@ classdef dect_tx < handle
 
     methods
         function obj = dect_tx()
-            obj.mac_meta = struct('Configuration','4b','a', '32', 'K',0,'L', 0, 'M', 0,'N', 1, 's', 0, 'z', 0,'Oversampling',1, "transmission_type", "RFP");
+            obj.mac_meta = struct('Configuration','5','a', '00', 'K',0,'L', 0, 'M', 0,'N', 1, 's', 0, 'z', 0,'Oversampling',1, "transmission_type", "RFP");
             obj.packet_data = general.get_general_params(obj.mac_meta);
             
 
@@ -20,6 +20,8 @@ classdef dect_tx < handle
             mod_scheme_struct = general.configuration_to_mod_scheme(mac_meta_arg);
             [num_t_field_bits, num_b_field_bits, num_x_field_bits] = mac_layer.calc_num_bits(mac_meta_arg,mod_scheme_struct);
 
+            general_params = general.get_general_params(mac_meta_arg);
+
 
             % generate MAC Layer Data
 
@@ -27,7 +29,7 @@ classdef dect_tx < handle
             % A-Field is 64/128/192 bits long and contains the Header (8
             % bits) the Tail (depending on modulation) and the Redundancy 
             % bits (16 bits)
-            a_field_h_t_bits = randi([0 1], 8+num_t_field_bits,1);
+            a_field_h_t_bits = randi([0 1], general_params.a_field.header+num_t_field_bits,1);
 
             % generate B-Field bits
             b_field_bits = randi([0 1], num_b_field_bits, 1);
@@ -36,7 +38,7 @@ classdef dect_tx < handle
             a_field_bits = mac_layer.calc_rcrc(a_field_h_t_bits);
             obj.packet_data.a_field_bits = a_field_bits;
             b_field_bits_scrambled = mac_layer.scramble_b_field(0,b_field_bits);
-            b_x_field_bits = mac_layer.calc_xcrc(b_field_bits_scrambled, mod_scheme_struct);
+            b_x_field_bits = mac_layer.calc_xcrc(b_field_bits_scrambled, mac_meta_arg);
 
 
             % PHL Layer
