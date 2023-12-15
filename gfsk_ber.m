@@ -1,20 +1,25 @@
 clear all;
 %close all;
 %%
-snr_vec = 0:1:30;
+snr_vec = 0:2:50;
 samplesPerSymbol = 2;
-samp_rate_effective = 1.728e6*samplesPerSymbol;
+samp_rate_effective = (480/(0.01/24))*samplesPerSymbol;
 
 gmskmodulator = comm.GMSKModulator('BitInput',true, ...
-                             'InitialPhaseOffset',pi/4,SamplesPerSymbol=samplesPerSymbol);
+    'BandwidthTimeProduct',0.5,...
+    'PulseLength',4,...
+     SamplesPerSymbol=samplesPerSymbol);
 randn(1,1) + 1i*randn(1,1);
 gmskdemodulator = comm.GMSKDemodulator('BitOutput',true, ...
-                                 'InitialPhaseOffset',pi/4, SamplesPerSymbol=samplesPerSymbol);
+    'BandwidthTimeProduct',0.5,...
+    'PulseLength',4,...
+     SamplesPerSymbol=samplesPerSymbol, ...
+     TracebackDepth=20);
 
 errorRate = comm.ErrorRate( ...
     ReceiveDelay=gmskdemodulator.TracebackDepth);
 
-channel_instance = 1000;
+channel_instance = 2500;
 
 ber_vec = zeros(numel(snr_vec),channel_instance);
 
@@ -26,47 +31,52 @@ for snr = snr_vec
     for i=1:channel_instance 
     
         data = randi([0 1],100,1);
-        data = zeros(100,1);
+        % data = zeros(100,1);
         modSignal = gmskmodulator(data);
 
         %modSignal = modSignal + 0.5*circshift(modSignal, 25);
 
         % flat
-        % ch_coeff = randn(1,1) + 1i*randn(1,1);
-        % ch_coeff = ch_coeff / sqrt(2);
-        % modSignal_ch = modSignal*ch_coeff;
+        ch_coeff = randn(1,1) + 1i*randn(1,1);
+        ch_coeff = ch_coeff / sqrt(2);
+        modSignal_ch = modSignal*ch_coeff;
 
         T = 1/samp_rate_effective;
 
         % % delay spread > =
-        % rayleighchan = comm.RayleighChannel( ...
-        %     'SampleRate',samp_rate_effective, ...
-        %     'PathDelays',T*[0 30], ...
-        %     'AveragePathGains',[0 0], ...
-        %     'NormalizePathGains',true, ...
-        %     'MaximumDopplerShift',0, ...
-        %     'DopplerSpectrum',{doppler('Gaussian',0.6)});
-        % 
-        % modSignal_ch = rayleighchan(modSignal);
+        rayleighchan = comm.RayleighChannel( ...
+            'SampleRate',samp_rate_effective, ...
+            'PathDelays',T*[0 ], ...
+            'AveragePathGains',[0 ], ...
+            'NormalizePathGains',true, ...
+            'MaximumDopplerShift',0, ...
+            'DopplerSpectrum',{doppler('Gaussian',0.6)},...
+            'Visualization','Impulse and frequency responses');
 
-        % % equalizer
-        % tmp0 = modSignal_ch.*conj(modSignal);
-        % tmp1 = sum(tmp0);
-        % tmp2 = angle(tmp1);
-        % modSignal_ch_equ = modSignal_ch*exp(1i*(-tmp2));
+        modSignal_ch = rayleighchan(modSignal);
+
         
         % noise
         channel = comm.AWGNChannel('NoiseMethod', ...
                        'Signal to noise ratio (SNR)', ...
                        'SNR',snr-pow2db(samplesPerSymbol));
         
-        noisySignal = channel(modSignal);
+        noisySignal = channel(modSignal_ch);
 
-        receivedData = gmskdemodulator(noisySignal);
+        % % equalizer
+        tmp0 = noisySignal(1:25).*conj(modSignal(1:25));
+        tmp1 = sum(tmp0);
+        tmp2 = angle(tmp1);
+        modSignal_ch_equ = noisySignal*exp(1i*(-tmp2));
+
+
+        receivedData = gmskdemodulator(modSignal_ch_equ);
         a= errorRate(data, receivedData);
         ber_vec(cnt,i) = a(1);
         
         errorRate.reset();
+        channel.release();
+        % rayleighchan.release();
     
     end
     
@@ -75,7 +85,7 @@ for snr = snr_vec
 end
 
 ber_vec = mean(ber_vec, 2);
-figure(1)
+figure()
 clf()
 semilogy(snr_vec,ber_vec);
 hold on

@@ -5,8 +5,8 @@ classdef dect_tx < handle
     end
 
     methods
-        function obj = dect_tx()
-            obj.mac_meta = struct('Configuration','5','a', '00', 'K',0,'L', 0, 'M', 0,'N', 1, 's', 0, 'z', 0,'Oversampling',1, "transmission_type", "RFP");
+        function obj = dect_tx(mac_meta)
+            obj.mac_meta = mac_meta;
             obj.packet_data = general.get_general_params(obj.mac_meta);
             
 
