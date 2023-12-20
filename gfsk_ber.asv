@@ -1,8 +1,8 @@
 clear all;
 %close all;
 %%
-snr_vec = 0:2:40;
-samplesPerSymbol = 2;
+snr_vec = 0:1:40;
+samplesPerSymbol = 2*4;
 symb_rate = (480/(0.01/24));
 samp_rate_effective = (480/(0.01/24))*samplesPerSymbol;
 T = 1/samp_rate_effective;
@@ -11,8 +11,9 @@ gmskmodulator = comm.GMSKModulator('BitInput',true, ...
     'BandwidthTimeProduct',0.5,...
     'PulseLength',4,...
      SamplesPerSymbol=samplesPerSymbol);
+randn(1,1) + 1i*randn(1,1);
 gmskdemodulator = comm.GMSKDemodulator('BitOutput',true, ...
-    'BandwidthTimeProduct',0.5,...
+    %'BandwidthTimeProduct',0.5,...
     'PulseLength',4,...
      SamplesPerSymbol=samplesPerSymbol, ...
      TracebackDepth=20);
@@ -38,9 +39,9 @@ for snr = snr_vec
         %modSignal = modSignal + 0.5*circshift(modSignal, 25);
 
         % flat
-        ch_coeff = randn(1,1) + 1i*randn(1,1);
-        ch_coeff = ch_coeff / sqrt(2);
-        modSignal_ch = modSignal*ch_coeff;
+        % ch_coeff = randn(1,1) + 1i*randn(1,1);
+        % ch_coeff = ch_coeff / sqrt(2);
+        % modSignal_ch = modSignal*ch_coeff;
 
         % % delay spread > =
         % rayleighchan = comm.RayleighChannel( ...
@@ -58,13 +59,10 @@ for snr = snr_vec
         
         % noise
         channel = comm.AWGNChannel('NoiseMethod', ...
-                       'Signal to noise ratio (Eb/No)', ...
-                       'BitsPerSymbol',1,...
-                       'SamplesPerSymbol',samplesPerSymbol,...
-                       'SignalPower',1,...
-                       'EbNo',snr);
+                       'Signal to noise ratio (SNR)', ...
+                       'SNR',snr+10*log10(symb_rate/samp_rate_effective));
         
-        noisySignal = channel(modSignal_ch);
+        noisySignal = channel(modSignal);
 
         % % equalizer
         tmp0 = noisySignal(1:25).*conj(modSignal(1:25));
