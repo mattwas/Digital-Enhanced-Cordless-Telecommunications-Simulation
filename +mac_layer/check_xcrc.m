@@ -54,7 +54,7 @@ function [b_field_without_x_bits,error] = check_xcrc(b_field_bits, mac_meta)
     test_bits_plus_xcrc = [r_polynomial; b_field_bits(end-x_crc_size+1:end)];
 
     if mod_struct.b_z_field_bits_per_symbol == 6
-        test_bits_plus_xcrc = [r_polynomial.'; b_field_bits(end-8-x_crc_size+1:end-8)];
+        test_bits_plus_xcrc = [r_polynomial; b_field_bits(end-8-x_crc_size+1:end-8)];
     end
     switch mod_struct.b_z_field_bits_per_symbol
         case 1

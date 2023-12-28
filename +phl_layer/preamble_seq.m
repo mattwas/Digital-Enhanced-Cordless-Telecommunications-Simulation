@@ -1,8 +1,8 @@
-function [preamble_samples] = preamble_seq(mac_meta, transmission_type)
+function [preamble_samples] = preamble_seq(mac_meta)
     % build the preamble according to the Standard with GFSK or PSK
     % Modulation
     
-    sync_bits = phl_layer.preamble_seq_bits(mac_meta,transmission_type);
+    sync_bits = phl_layer.preamble_seq_bits(mac_meta);
     
     mod_scheme = general.configuration_to_mod_scheme(mac_meta);
 
@@ -18,11 +18,7 @@ function [preamble_samples] = preamble_seq(mac_meta, transmission_type)
             'SamplesPerSymbol',general_params.samples_per_symbol);
             preamble_samples = s_field_Mod(sync_bits);
         case 'pi/2-DBPSK'
-            preamble_samples = pskmod( ...
-                    sync_bits, ...
-                    2, ...
-                    pi/2,...
-                    InputType="bit");
+            preamble_samples = phl_layer.dect_dpsk_modulation(sync_bits, 1);
             pulse_shaping_filter = comm.RaisedCosineTransmitFilter(...
                 "RolloffFactor",0.5,...
                 "FilterSpanInSymbols",general_params.raised_cosine_length_symbols,...

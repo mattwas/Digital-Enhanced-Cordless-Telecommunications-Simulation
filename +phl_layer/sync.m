@@ -2,7 +2,7 @@ function [start_of_packet, samples_after_sync] = sync(mac_meta, toggle, samples)
 % Synchronisation function for the Receiver. Output is the the Start of the
 % modulated S-Field
     if toggle == 1
-        preamble_samples = phl_layer.preamble_seq(mac_meta, mac_meta.transmission_type);
+        preamble_samples = phl_layer.preamble_seq(mac_meta);
         preamble_detector = comm.PreambleDetector('Preamble',preamble_samples, 'Detections','All',"Threshold",50);
         [above_threshhold,metric] = preamble_detector(samples);
     
@@ -25,6 +25,7 @@ function [start_of_packet, samples_after_sync] = sync(mac_meta, toggle, samples)
         phase_offset = sum(samples(start_of_packet:start_of_packet+numel(preamble_samples)-1).*conj(preamble_samples));
         phase_offset = angle(phase_offset);
         samples_after_sync = samples*exp(1i*(-phase_offset));
+        % samples_after_sync = samples;
         
 
     elseif toggle == 0

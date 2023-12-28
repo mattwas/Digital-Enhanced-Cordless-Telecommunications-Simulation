@@ -42,7 +42,7 @@ classdef dect_tx < handle
 
 
             % PHL Layer
-            s_field_bits = phl_layer.preamble_seq_bits(mac_meta_arg,"RFP");
+            s_field_bits = phl_layer.preamble_seq_bits(mac_meta_arg);
             z_field_bits = phl_layer.set_z_field(b_x_field_bits,mac_meta_arg);
 
             packet_data_bits = cell(3,1);
