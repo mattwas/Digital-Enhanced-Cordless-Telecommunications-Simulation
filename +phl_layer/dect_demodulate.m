@@ -25,25 +25,6 @@ function [a_field_bits_rv,b_z_field_bits_rv] = dect_demodulate(samples,mac_meta,
                 % sync not working at the moment, we assume perfect
                 % synchronisation
 
-                if synchronisation.packet_start == 1
-                   synchronisation.packet_start = synchronisation.packet_start + general_params.raised_cosine_length_symbols;
-                end
-
-
-                pulse_shaping_filter = comm.RaisedCosineReceiveFilter(...
-                    "RolloffFactor",0.5,...
-                    "FilterSpanInSymbols",general_params.raised_cosine_length_symbols,...
-                    "InputSamplesPerSymbol",general_params.samples_per_symbol,...
-                    "DecimationFactor",general_params.samples_per_symbol);
-
-                samples = pulse_shaping_filter(samples);
-
-                % signal is now not oversampled anymore
-
-                % bring the power back to baseline
-
-                current_rms = rms(samples);
-                samples = samples./current_rms;
 
                 % derive the number of samples per data field
 
@@ -94,23 +75,6 @@ function [a_field_bits_rv,b_z_field_bits_rv] = dect_demodulate(samples,mac_meta,
                 end
 
         case {"5", "6"}
-                if synchronisation.packet_start == 1
-                   synchronisation.packet_start = synchronisation.packet_start + general_params.raised_cosine_length_symbols;
-                end
-
-
-                pulse_shaping_filter = comm.RaisedCosineReceiveFilter(...
-                    "RolloffFactor",0.5,...
-                    "FilterSpanInSymbols",general_params.raised_cosine_length_symbols,...
-                    "InputSamplesPerSymbol",general_params.samples_per_symbol,...
-                    "DecimationFactor",general_params.samples_per_symbol);
-
-                samples = pulse_shaping_filter(samples);
-
-                % bring the power back to baseline
-
-                current_rms = rms(samples);
-                samples = samples./current_rms;
 
                 a_field_size_symbols = (size_t_field_bits+8+16)/mod_scheme.a_field_bits_per_symbol;
                 b_z_field_size_symbols = (size_b_field_bits+size_x_field_bits)/mod_scheme.b_z_field_bits_per_symbol;

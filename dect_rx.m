@@ -9,10 +9,11 @@ classdef dect_rx < handle
     end
 
     methods
-        function obj = dect_rx(mac_meta_argin, sync_param)
+        function obj = dect_rx(mac_meta_argin, sync_params)
             obj.mac_meta = mac_meta_argin;
             obj.packet_data = general.get_general_params(obj.mac_meta);
-            obj.synchronisation.toggle = sync_param;
+            obj.synchronisation.timing_offset = sync_params.timing_offset;
+            obj.synchronisation.frequency_offset = sync_params.frequency_offset;
 
         end
     end
@@ -21,8 +22,8 @@ classdef dect_rx < handle
         
         function [rcrc_correct, xcrc_correct] = decode_packet(obj,samples_rx)
             mac_meta_arg = obj.mac_meta;
-            synchronisation_toggle = obj.synchronisation.toggle;
-            [packet_start_idx, samples_rx_after_sync] = phl_layer.sync(mac_meta_arg,synchronisation_toggle,samples_rx);
+            synchronisation_options = obj.synchronisation;
+            [packet_start_idx, samples_rx_after_sync] = phl_layer.sync(mac_meta_arg,synchronisation_options,samples_rx);
             obj.synchronisation.packet_start = packet_start_idx;
             [a_field_bits_rv, b_z_field_bits_rv] = phl_layer.dect_demodulate(samples_rx_after_sync,mac_meta_arg, obj.synchronisation);
             obj.packet_data.a_field_bits_rv = a_field_bits_rv;

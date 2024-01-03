@@ -3,7 +3,7 @@ close all;
 
 %% setup for DECT parameters
 
-mac_meta.Configuration = '3a' ; % Configuration according to PHL
+mac_meta.Configuration = '1a' ; % Configuration according to PHL
 mac_meta.a = '80';       % which physical packet are we using: '00' = short packet, '32' = basic packet, '00j' = low capacity packet, '80' = high capacity packet
 mac_meta.K = 0;          % in which slot (0 - 23) should the packet be transmitted
 mac_meta.L = 0;          % which half slot should be used for the packet (0 for first; 1 for second)
@@ -14,11 +14,11 @@ mac_meta.z = 0;          % z-field indicator, for collision detection (0 = no Z 
 mac_meta.Oversampling = 2; % oversampling
 mac_meta.transmission_type = "RFP"; % Transmission Type changes the sequence of the S-Field
 
-delay_spread = [100e-9; 300e-9];
+delay_spread = [100e-9; 150e-9];
 
 %% setup for simulation
 num_of_packets_per_snr = 1e3;
-snr_db_vec_global = 0 : 1.0 : 40;
+snr_db_vec_global = 0 : 2.0 : 40;
 num_of_workers = numel(snr_db_vec_global);
 PER_a_field_cell = cell(numel(delay_spread),numel(snr_db_vec_global),1);
 PER_b_field_cell = cell(numel(delay_spread),numel(snr_db_vec_global),1);

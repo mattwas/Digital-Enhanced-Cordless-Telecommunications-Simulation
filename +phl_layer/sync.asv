@@ -36,20 +36,18 @@ preamble_samples = phl_layer.preamble_seq(mac_meta);
             error('CFO correction does not work with GMSK, it is corrected by the Viterbi');
         end
 
-
-
         coarse_cfo_correction = comm.CoarseFrequencyCompensator(...
             "Modulation","QPSK",...
             "SampleRate",general_params.SamplingRate/general_params.samples_per_symbol, ...
-            "FrequencyResolution",100);
+            "FrequencyResolution",1);
         
-        
+
         carrier_sync = comm.CarrierSynchronizer(...
             "Modulation","QPSK",...
             "ModulationPhaseOffset",'Custom',...
             'CustomPhaseOffset',pi/4,...
             "SamplesPerSymbol",1, ...
-            "NormalizedLoopBandwidth",0.00001);
+            "NormalizedLoopBandwidth",0.0001);
 
         % the Pulse Shaping Filter causes problems for the CFO correction,
         % in a real receiver the CFO would be corrected first before the
@@ -70,13 +68,15 @@ preamble_samples = phl_layer.preamble_seq(mac_meta);
 
         % apply fine CFO correction
         [~,ph_error] = carrier_sync(samples_coarse_cfo(1:numel(preamble_samples)));
-        fine_cfo = diff(ph_error)*(general_params.SamplingRate/general_params.samples_per_symbol)/(2*pi);
-        mean_fine_cfo = cumsum(fine_cfo)./(1:length(fine_cfo))';
-        samples_fine_cfo = samples_coarse_cfo.*exp(1i*2*pi*(fine_cfo(end))*time);
-        
-        samples_after_sync = samples_fine_cfo;
+        fine_cfo = diff(ph_error)*
+        samples_fine_cfo = samples_coarse_cfo*exp(1i*(-fine_cfo));
 
-
+        % for coherent detection we need to correct the phase ambiguity of the
+        % samples by using the preamble as reference for the correction
+        preamble_samples = phl_layer.dect_pulse_shaping(preamble_samples,mac_meta);
+        phase_offset = sum(samples_fine_cfo(1:numel(preamble_samples)).*conj(preamble_samples));
+        phase_offset = angle(phase_offset);
+        samples_after_sync = samples_fine_cfo*exp(1i*(-phase_offset));
 
     elseif synchronisation.frequency_offset == 0
 
@@ -93,13 +93,7 @@ preamble_samples = phl_layer.preamble_seq(mac_meta);
         error('Option not viable');
 
     end
-    
-    % for coherent detection we need to correct the phase ambiguity of the
-    % samples by using the preamble as reference for the correction
-    preamble_samples = phl_layer.dect_pulse_shaping(preamble_samples,mac_meta);
-    phase_offset = sum(samples_after_sync(1:numel(preamble_samples)).*conj(preamble_samples));
-    phase_offset = angle(phase_offset);
-    samples_after_sync = samples_after_sync*exp(1i*(-phase_offset));
+        
 
     
 end

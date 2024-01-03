@@ -43,22 +43,7 @@ function [samples_tx,SamplingRate] = dect_modulate(packet_data,mod_scheme, mac_m
 
             samples_tx = [s_field_data_samples; a_field_data_samples;b_z_field_data_samples];
 
-            % pulse shaping according to standard
-
-            pulse_shaping_filter = comm.RaisedCosineTransmitFilter(...
-                "RolloffFactor",0.5,...
-                "FilterSpanInSymbols",general_params.raised_cosine_length_symbols,...
-                "OutputSamplesPerSymbol",samples_per_symbol);
-
-            % prolong the samples, cause of the filter delay
-            samples_tx = [samples_tx; zeros(general_params.raised_cosine_length_symbols,1)];
-            samples_tx = pulse_shaping_filter(samples_tx);
-
-
-            % power boost to bring the rms to 1 (0 dB). The attentuation of the
-            % filter is getting reversed
-            rms_after_filter = rms(samples_tx);
-            samples_tx = samples_tx./rms_after_filter;
+            samples_tx = phl_layer.dect_pulse_shaping(samples_tx,mac_meta);
 
         case {"5", "6"}
 
@@ -78,22 +63,7 @@ function [samples_tx,SamplingRate] = dect_modulate(packet_data,mod_scheme, mac_m
 
             samples_tx = [s_field_data_samples; a_field_data_samples;b_z_field_data_samples];
 
-            % pulse shaping according to standard
-
-            pulse_shaping_filter = comm.RaisedCosineTransmitFilter(...
-                "RolloffFactor",0.5,...
-                "FilterSpanInSymbols",general_params.raised_cosine_length_symbols,...
-                "OutputSamplesPerSymbol",samples_per_symbol);
-
-            % prolong the samples, cause of the filter delay
-            samples_tx = [samples_tx; zeros(general_params.raised_cosine_length_symbols,1)];
-            samples_tx = pulse_shaping_filter(samples_tx);
-
-
-            % power boost to bring the rms to 1 (0 dB). The attentuation of the
-            % filter is getting reversed
-            rms_after_filter = rms(samples_tx);
-            samples_tx = samples_tx./rms_after_filter;
+            samples_tx = phl_layer.dect_pulse_shaping(samples_tx,mac_meta);
             
         otherwise
             error("invalid Configuration");
