@@ -96,7 +96,9 @@ preamble_samples = phl_layer.preamble_seq(mac_meta);
     
     % for coherent detection we need to correct the phase ambiguity of the
     % samples by using the preamble as reference for the correction
-    preamble_samples = phl_layer.dect_pulse_shaping(preamble_samples,mac_meta);
+    if ~isequal(mac_meta.Configuration, '1a')
+        preamble_samples = phl_layer.dect_undo_pulse_shaping(preamble_samples,mac_meta);
+    end
     phase_offset = sum(samples_after_sync(1:numel(preamble_samples)).*conj(preamble_samples));
     phase_offset = angle(phase_offset);
     samples_after_sync = samples_after_sync*exp(1i*(-phase_offset));

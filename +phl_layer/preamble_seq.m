@@ -18,15 +18,8 @@ function [preamble_samples] = preamble_seq(mac_meta)
             'SamplesPerSymbol',general_params.samples_per_symbol);
             preamble_samples = s_field_Mod(sync_bits);
         case 'pi/2-DBPSK'
-            preamble_samples = phl_layer.dect_dpsk_modulation(sync_bits, 1);
-            pulse_shaping_filter = comm.RaisedCosineTransmitFilter(...
-                "RolloffFactor",0.5,...
-                "FilterSpanInSymbols",general_params.raised_cosine_length_symbols,...
-                "OutputSamplesPerSymbol",samples_per_symbol);
-
-            % prolong the samples, cause of the filter delay
-            preamble_samples = [preamble_samples; zeros(general_params.raised_cosine_length_symbols,1)];
-            preamble_samples = pulse_shaping_filter(preamble_samples);
+            preamble_samples_dbpsk = phl_layer.dect_dpsk_modulation(sync_bits, 1);
+            preamble_samples = phl_layer.dect_pulse_shaping(preamble_samples_dbpsk, mac_meta);
      end
 
     
