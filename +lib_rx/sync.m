@@ -39,13 +39,19 @@ noise_window = 20;
         
     end
 
-    %% Antenna Selecting
+    %% Diversity
 
-    % Antenna Selecting
+    
     if mac_meta.N_Rx > 1
-        samples_antenna_selected = lib_rx.antenna_selection(samples_timing_synchronized,mac_meta);
+        if isequal(mac_meta.antenna_processing, 'Antenna Selection')
+            samples_diversity = lib_rx.antenna_selection(samples_timing_synchronized,mac_meta);
+        elseif isequal(mac_meta.antenna_processing, 'Antenna Combining')
+            samples_diversity = lib_rx.antenna_combining(samples_timing_synchronized,mac_meta);
+        else
+            error("Receiver Antenna Processing not valid");
+        end
     else 
-        samples_antenna_selected = samples_timing_synchronized;
+        samples_diversity = samples_timing_synchronized;
     end
 
 
@@ -75,7 +81,7 @@ noise_window = 20;
         % in a real receiver the CFO would be corrected first before the
         % Pulse Shaping gets reversed
 
-        samples_deshaped = phl_layer.dect_undo_pulse_shaping(samples_antenna_selected, mac_meta);
+        samples_deshaped = phl_layer.dect_undo_pulse_shaping(samples_diversity, mac_meta);
 
         % Coarse CFO Correction
 
@@ -101,9 +107,9 @@ noise_window = 20;
     elseif synchronisation.frequency_offset == 0
 
         % apply Unshaping Filter
-        samples_deshaped = phl_layer.dect_undo_pulse_shaping(samples_antenna_selected, mac_meta);
+        samples_deshaped = phl_layer.dect_undo_pulse_shaping(samples_diversity, mac_meta);
         if isequal(mac_meta.Configuration, '1a')
-            samples_deshaped = samples_antenna_selected;
+            samples_deshaped = samples_diversity;
         end
 
         samples_after_sync = samples_deshaped;

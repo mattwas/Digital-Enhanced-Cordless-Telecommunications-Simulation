@@ -14,11 +14,11 @@ mac_meta.z                  = 0;          % z-field indicator, for collision det
 target_SamplingRate         = 27.648e6/3;
 mac_meta.Oversampling       = target_SamplingRate/1152000; % oversampling, this sets the samples per symbol
 mac_meta.transmission_type  = "RFP"; % Transmission Type, changes the sequence of the S-Field
-
-delay_spread                = [100e-9; 50e-9];
+N_Rx = 4;
+delay_spread                = [1e-12];
 
 %% setup for simulation
-num_of_packets_per_snr = 1e4;
+num_of_packets_per_snr = 5e3;
 snr_db_vec_global = 0 : 1.0 : 40;
 num_of_workers = numel(snr_db_vec_global);
 PER_a_field_cell = cell(numel(delay_spread),numel(snr_db_vec_global),1);
@@ -31,15 +31,21 @@ n_bits_b_z_field_error = zeros(num_of_workers,1);
 PER_b_field_array = zeros(numel(delay_spread),size(PER_b_field_cell,1));
 PER_a_field_array = zeros(numel(delay_spread),size(PER_a_field_cell,1));
 
+
+tx = dect_tx(mac_meta);
+
+
+mac_meta_rx = mac_meta;
+mac_meta_rx.N_Rx = N_Rx;
+mac_meta_rx.antenna_processing = "Antenna Combining";
+
 sync_options.timing_offset = false;
 sync_options.frequency_offset = false;
 
-tx = dect_tx(mac_meta);
-rx = dect_rx(tx.mac_meta, sync_options);
-T = (1/tx.packet_data.SamplingRate);
+rx = dect_rx(mac_meta_rx, sync_options);
 
-errorRate = comm.ErrorRate( ...
-    ReceiveDelay=tx.packet_data.viterbi_traceback_depth);
+
+errorRate = comm.ErrorRate();
 
 ber_vec = zeros(numel(snr_db_vec_global),num_of_packets_per_snr);
 
@@ -57,13 +63,13 @@ for l=1:numel(delay_spread)
             % create channel
             ch                      = lib_rf_channel.rf_channel();
             ch.verbose              = 0;
-            ch.type                 = 'rayleigh';
+            ch.type                 = 'deterministic';
             ch.amp                  = 1.0;
             ch.noise                = true;
             ch.snr_db             	= snr_db_vec_global(i);
             ch.samples_per_symbol   = tx.mac_meta.Oversampling;
             ch.N_TX                	= 1;
-            ch.N_RX               	= 1;
+            ch.N_RX               	= N_Rx;
             ch.awgn_random_source   = 'global';
             ch.awgn_randomstream_seed 	= randi(1e9,[1 1]);
             ch.d_sto                = 0;
@@ -81,7 +87,7 @@ for l=1:numel(delay_spread)
             ch.r_K                  = db2pow(9.0 + 0.00*randn(1,1));    %93e-9;
             ch.r_interpolation      = true;
             ch.r_gains_active 	    = true;
-            ch.init_rayleigh_rician_channel();
+            %ch.init_rayleigh_rician_channel();
         
             
             for k = 1:1:num_of_packets_per_snr
@@ -170,6 +176,7 @@ ylim([10e-5 1]);
 figure;semilogy(snr_db_vec_global,ber_b_field{1});
 title("BER B-Field");
 xlabel("SNR in dB");
-
+xlim([0 40]);
+ylim([10e-6 1]);
 
 
