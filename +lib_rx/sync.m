@@ -3,24 +3,30 @@ function [start_of_packet, samples_after_sync] = sync(mac_meta, synchronisation,
 % modulated S-Field
 general_params = general.get_general_params(mac_meta);
 preamble_samples = phl_layer.preamble_seq(mac_meta);
+start_of_packet = zeros(1,mac_meta.N_Rx);
+samples_timing_synchronized = zeros(general_params.packet_size,mac_meta.N_Rx);
+noise_window = 20;
 
-
+%% Timing Synchronisation
     if synchronisation.timing_offset == 1
-        preamble_detector = comm.PreambleDetector('Preamble',preamble_samples, 'Detections','All',"Threshold",50);
-        [above_threshhold,metric] = preamble_detector(samples);
-    
-        % in case there are values above the treshhold
-        if numel(above_threshhold) >= 1 || numel(above_threshhold) == 0
-             start_of_packet = find(metric >= max(metric))+1-numel(preamble_samples);
-        elseif numel(above_threshhold) == 1 
-            start_of_packet = above_threshhold+1-numel(preamble_samples);
-        else
-            start_of_packet = 1;
+
+        for i=1:mac_meta.N_Rx
+            preamble_detector = comm.PreambleDetector('Preamble',preamble_samples, 'Detections','All',"Threshold",50);
+            [above_threshhold,metric] = preamble_detector(samples(:,i));
+        
+            % in case there are values above the treshhold
+            if numel(above_threshhold) >= 1 || numel(above_threshhold) == 0
+                 start_of_packet(:,i) = find(metric >= max(metric))+1-numel(preamble_samples);
+            elseif numel(above_threshhold) == 1 
+                start_of_packet(:,i) = above_threshhold+1-numel(preamble_samples);
+            else
+                start_of_packet(:,i) = 1;
+            end
         end
             
 
     elseif synchronisation.timing_offset == 0
-            start_of_packet = 1;
+            start_of_packet(:,:) = 1;
 
     else
         error('Option not viable');
@@ -28,8 +34,22 @@ preamble_samples = phl_layer.preamble_seq(mac_meta);
 
 
     % synchronize the samples
-    samples_timing_synchronized = samples(start_of_packet:start_of_packet+general_params.packet_size-1);
+    for i=1:mac_meta.N_Rx
+        samples_timing_synchronized(:,i) = samples(start_of_packet:start_of_packet+general_params.packet_size-1, i);
+        
+    end
 
+    %% Antenna Selecting
+
+    % Antenna Selecting
+    if mac_meta.N_Rx > 1
+        samples_antenna_selected = lib_rx.antenna_selection(samples_timing_synchronized,mac_meta);
+    else 
+        samples_antenna_selected = samples_timing_synchronized;
+    end
+
+
+    %% Carrier Frequency Offset Correction
     if synchronisation.frequency_offset == 1
 
         if isequal(mac_meta.Configuration, '1a')
@@ -55,7 +75,7 @@ preamble_samples = phl_layer.preamble_seq(mac_meta);
         % in a real receiver the CFO would be corrected first before the
         % Pulse Shaping gets reversed
 
-        samples_deshaped = phl_layer.dect_undo_pulse_shaping(samples_timing_synchronized, mac_meta);
+        samples_deshaped = phl_layer.dect_undo_pulse_shaping(samples_antenna_selected, mac_meta);
 
         % Coarse CFO Correction
 
@@ -81,9 +101,9 @@ preamble_samples = phl_layer.preamble_seq(mac_meta);
     elseif synchronisation.frequency_offset == 0
 
         % apply Unshaping Filter
-        samples_deshaped = phl_layer.dect_undo_pulse_shaping(samples_timing_synchronized, mac_meta);
+        samples_deshaped = phl_layer.dect_undo_pulse_shaping(samples_antenna_selected, mac_meta);
         if isequal(mac_meta.Configuration, '1a')
-            samples_deshaped = samples;
+            samples_deshaped = samples_antenna_selected;
         end
 
         samples_after_sync = samples_deshaped;
@@ -93,6 +113,8 @@ preamble_samples = phl_layer.preamble_seq(mac_meta);
         error('Option not viable');
 
     end
+
+    %% Correct Phase Ambiguity
     
     % for coherent detection we need to correct the phase ambiguity of the
     % samples by using the preamble as reference for the correction
