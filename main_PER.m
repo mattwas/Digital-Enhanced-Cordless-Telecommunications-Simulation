@@ -11,11 +11,11 @@ mac_meta.M                  = 0;          % which RF channel
 mac_meta.N                  = 1;          % Radio fixed Part Number (RPN)
 mac_meta.s                  = 0;          % synchronization field (0 = normal length, 1 = prolonged)   
 mac_meta.z                  = 0;          % z-field indicator, for collision detection (0 = no Z field, 1 = Z Field active)
-target_SamplingRate         = 27.648e6;
+target_SamplingRate         = 27.648e6/3;
 mac_meta.Oversampling       = target_SamplingRate/1152000; % oversampling, this sets the samples per symbol
 mac_meta.transmission_type  = "RFP"; % Transmission Type, changes the sequence of the S-Field
 
-delay_spread                = [100e-9; 150e-9];
+delay_spread                = [100e-9; 50e-9];
 
 %% setup for simulation
 num_of_packets_per_snr = 1e4;
@@ -29,7 +29,7 @@ n_bits_b_z_field_send = zeros(num_of_workers,1);
 n_bits_b_z_field_error = zeros(num_of_workers,1);
 
 PER_b_field_array = zeros(numel(delay_spread),size(PER_b_field_cell,1));
-
+PER_a_field_array = zeros(numel(delay_spread),size(PER_a_field_cell,1));
 
 sync_options.timing_offset = false;
 sync_options.frequency_offset = false;
@@ -130,7 +130,6 @@ for l=1:numel(delay_spread)
         PER_b_field_array(l,k) = PER_b_field_cell{l,k};
     end
     
-    PER_a_field_array = zeros(numel(delay_spread),size(PER_a_field_cell,2));
     
     for k = 1:size(PER_b_field_cell,2)
         PER_a_field_array(l,k) = PER_a_field_cell{l,k};
@@ -148,7 +147,7 @@ n_bits_b_z_field_error = zeros(num_of_workers,1);
 
 
 figure;semilogy(snr_db_vec_global,PER_b_field_array(1,:));
-title("PER");
+title("PER B Field");
 xlabel("SNR in dB");
 grid on
 hold on
@@ -157,8 +156,19 @@ legend("100 ns", "150 ns");
 xlim([0 40]);
 ylim([10e-5 1]);
 
+figure;semilogy(snr_db_vec_global,PER_a_field_array(1,:));
+title("PER A Field");
+xlabel("SNR in dB");
+grid on
+hold on
+semilogy(snr_db_vec_global,PER_a_field_array(2,:));
+legend("100 ns", "150 ns");
+xlim([0 40]);
+ylim([10e-5 1]);
+
+
 figure;semilogy(snr_db_vec_global,ber_b_field{1});
-title("BER A-Field");
+title("BER B-Field");
 xlabel("SNR in dB");
 
 
