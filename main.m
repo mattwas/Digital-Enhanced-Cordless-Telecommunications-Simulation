@@ -11,7 +11,7 @@ mac_meta.M = 0;          % which RF channel
 mac_meta.N = 1;          % Radio fixed Part Number (RPN)
 mac_meta.s = 0;          % synchronization field (0 = normal length, 1 = prolonged)   
 mac_meta.z = 0;          % z-field indicator, for collision detection (0 = no Z field, 1 = Z Field active)
-mac_meta.Oversampling = 2; % oversampling
+mac_meta.Oversampling = 1; % oversampling
 mac_meta.transmission_type = "RFP"; % Transmission Type changes the sequence of the S-Field
 
 sync_options.timing_offset = false;
