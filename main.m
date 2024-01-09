@@ -3,7 +3,7 @@ clear all;
 
 %% Set the parameters for the packet
 
-mac_meta.Configuration = '1a' ; % Configuration according to PHL
+mac_meta.Configuration = '4b' ; % Configuration according to PHL
 mac_meta.a = '80';       % which physical packet are we using: '00' = short packet, '32' = basic packet, '00j' = low capacity packet, '80' = high capacity packet
 mac_meta.K = 0;          % in which slot (0 - 23) should the packet be transmitted
 mac_meta.L = 0;          % which half slot should be used for the packet (0 for first; 1 for second)
@@ -18,7 +18,7 @@ sync_options.timing_offset = false;
 sync_options.frequency_offset = false;
 
 mac_meta_rx = mac_meta;
-mac_meta_rx.N_Rx = 2;
+mac_meta_rx.N_Rx = 4;
 
 mac_meta_rx.antenna_processing = "Antenna Combining";
 
@@ -44,9 +44,11 @@ samples_rx = rayleighchan(samples_tx);
 samples_rx = awgn_chan(samples_tx);
 
 
-samples_antennas = zeros(numel(samples_tx),2);
+samples_antennas = zeros(numel(samples_tx),4);
 samples_antennas(:,1) = awgn_chan(samples_tx);
 samples_antennas(:,2) = awgn_chan_2(samples_tx);
+samples_antennas(:,3) = awgn_chan_2(samples_tx);
+samples_antennas(:,4) = awgn_chan_2(samples_tx);
  
 [rcrc, xcrc] = rx.decode_packet(samples_antennas);
 

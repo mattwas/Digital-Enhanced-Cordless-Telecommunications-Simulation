@@ -2,15 +2,22 @@ function [start_of_packet, samples_after_sync] = sync(mac_meta, synchronisation,
 % Synchronisation function for the Receiver. Output is the the Start of the
 % modulated S-Field
 general_params = general.get_general_params(mac_meta);
-preamble_samples = phl_layer.preamble_seq(mac_meta);
 start_of_packet = zeros(1,mac_meta.N_Rx);
 samples_timing_synchronized = zeros(general_params.packet_size,mac_meta.N_Rx);
-noise_window = 20;
+samples_antenna_corrected = zeros(general_params.packet_size,mac_meta.N_Rx);
+if ~isequal(mac_meta.Configuration, '1a')
+    samples_antenna_corrected = zeros(general_params.packet_size/general_params.samples_per_symbol,mac_meta.N_Rx); 
+end
+samples_after_sync = zeros(general_params.packet_size/general_params.samples_per_symbol,1);
 
+
+for i=1:mac_meta.N_Rx
+
+    preamble_samples = phl_layer.preamble_seq(mac_meta);
 %% Timing Synchronisation
     if synchronisation.timing_offset == 1
 
-        for i=1:mac_meta.N_Rx
+            
             preamble_detector = comm.PreambleDetector('Preamble',preamble_samples, 'Detections','All',"Threshold",50);
             [above_threshhold,metric] = preamble_detector(samples(:,i));
         
@@ -22,11 +29,11 @@ noise_window = 20;
             else
                 start_of_packet(:,i) = 1;
             end
-        end
+        
             
 
     elseif synchronisation.timing_offset == 0
-            start_of_packet(:,:) = 1;
+            start_of_packet(:,i) = 1;
 
     else
         error('Option not viable');
@@ -34,25 +41,8 @@ noise_window = 20;
 
 
     % synchronize the samples
-    for i=1:mac_meta.N_Rx
-        samples_timing_synchronized(:,i) = samples(start_of_packet:start_of_packet+general_params.packet_size-1, i);
-        
-    end
 
-    %% Diversity
-
-    
-    if mac_meta.N_Rx > 1
-        if isequal(mac_meta.antenna_processing, 'Antenna Selection')
-            samples_diversity = lib_rx.antenna_selection(samples_timing_synchronized,mac_meta);
-        elseif isequal(mac_meta.antenna_processing, 'Antenna Combining')
-            samples_diversity = lib_rx.antenna_combining(samples_timing_synchronized,mac_meta);
-        else
-            error("Receiver Antenna Processing not valid");
-        end
-    else 
-        samples_diversity = samples_timing_synchronized;
-    end
+    samples_timing_synchronized(:,i) = samples(start_of_packet(i):start_of_packet(i)+general_params.packet_size-1, i);
 
 
     %% Carrier Frequency Offset Correction
@@ -81,15 +71,14 @@ noise_window = 20;
         % in a real receiver the CFO would be corrected first before the
         % Pulse Shaping gets reversed
 
-        samples_deshaped = phl_layer.dect_undo_pulse_shaping(samples_diversity, mac_meta);
-
-        % Coarse CFO Correction
+        samples_deshaped = phl_layer.dect_undo_pulse_shaping(samples_timing_synchronized(:,i), mac_meta);
 
         % calculate a Time Reference
         num_of_samples = general_params.packet_size/general_params.samples_per_symbol;
         time = 0:1:(num_of_samples-1);
         time = time'*1/(general_params.SamplingRate/general_params.samples_per_symbol);
-
+        
+        % Coarse CFO Correction
 
         [~,coarse_cfo] = coarse_cfo_correction(samples_deshaped(1:numel(preamble_samples)));
         samples_coarse_cfo = samples_deshaped.*exp(1i*2*pi*(-coarse_cfo)*time);
@@ -100,19 +89,19 @@ noise_window = 20;
         mean_fine_cfo = cumsum(fine_cfo)./(1:length(fine_cfo))';
         samples_fine_cfo = samples_coarse_cfo.*exp(1i*2*pi*(fine_cfo(end))*time);
         
-        samples_after_sync = samples_fine_cfo;
+        samples_antenna_corrected(:,i) = samples_fine_cfo;
 
 
 
     elseif synchronisation.frequency_offset == 0
 
         % apply Unshaping Filter
-        samples_deshaped = phl_layer.dect_undo_pulse_shaping(samples_diversity, mac_meta);
+        samples_deshaped = phl_layer.dect_undo_pulse_shaping(samples_timing_synchronized(:,i), mac_meta);
         if isequal(mac_meta.Configuration, '1a')
-            samples_deshaped = samples_diversity;
+            samples_deshaped = samples_timing_synchronized(:,i);
         end
 
-        samples_after_sync = samples_deshaped;
+        samples_antenna_corrected(:,i) = samples_deshaped;
 
 
     else
@@ -127,9 +116,32 @@ noise_window = 20;
     if ~isequal(mac_meta.Configuration, '1a')
         preamble_samples = phl_layer.dect_undo_pulse_shaping(preamble_samples,mac_meta);
     end
-    phase_offset = sum(samples_after_sync(1:numel(preamble_samples)).*conj(preamble_samples));
+    phase_offset = sum(samples_antenna_corrected(1:numel(preamble_samples),i).*conj(preamble_samples));
     phase_offset = angle(phase_offset);
-    samples_after_sync = samples_after_sync*exp(1i*(-phase_offset));
+    samples_antenna_corrected(:,i) = samples_antenna_corrected(:,i)*exp(1i*(-phase_offset));
+end
+
+if 0
+    scatterplot(samples_antenna_corrected(:,1))
+    scatterplot(samples_antenna_corrected(:,2))
+end
+
+
+    %% Diversity
+
+    
+    if mac_meta.N_Rx > 1
+        if isequal(mac_meta.antenna_processing, 'Antenna Selection')
+            samples_after_sync = lib_rx.antenna_selection(samples_antenna_corrected,mac_meta);
+        elseif isequal(mac_meta.antenna_processing, 'Antenna Combining')
+            samples_after_sync = lib_rx.antenna_combining(samples_antenna_corrected,mac_meta);
+        else
+            error("Receiver Antenna Processing not valid");
+        end
+    else 
+        samples_after_sync = samples_antenna_corrected;
+    end
+
 
     
 end

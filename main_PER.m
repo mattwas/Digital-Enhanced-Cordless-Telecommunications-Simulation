@@ -11,15 +11,15 @@ mac_meta.M                  = 0;          % which RF channel
 mac_meta.N                  = 1;          % Radio fixed Part Number (RPN)
 mac_meta.s                  = 0;          % synchronization field (0 = normal length, 1 = prolonged)   
 mac_meta.z                  = 0;          % z-field indicator, for collision detection (0 = no Z field, 1 = Z Field active)
-target_SamplingRate         = 27.648e6/3;
+target_SamplingRate         = 27.648e6;
 mac_meta.Oversampling       = target_SamplingRate/1152000; % oversampling, this sets the samples per symbol
 mac_meta.transmission_type  = "RFP"; % Transmission Type, changes the sequence of the S-Field
-N_Rx = 4;
-delay_spread                = [1e-12];
+N_Rx = [1; 2];
+delay_spread                = [100e-9];
 
 %% setup for simulation
-num_of_packets_per_snr = 5e3;
-snr_db_vec_global = 0 : 1.0 : 40;
+num_of_packets_per_snr = 1e5;
+snr_db_vec_global = 0 : 0.5 : 40;
 num_of_workers = numel(snr_db_vec_global);
 PER_a_field_cell = cell(numel(delay_spread),numel(snr_db_vec_global),1);
 PER_b_field_cell = cell(numel(delay_spread),numel(snr_db_vec_global),1);
@@ -42,7 +42,6 @@ mac_meta_rx.antenna_processing = "Antenna Combining";
 sync_options.timing_offset = false;
 sync_options.frequency_offset = false;
 
-rx = dect_rx(mac_meta_rx, sync_options);
 
 
 errorRate = comm.ErrorRate();
@@ -54,7 +53,9 @@ ber_vec = zeros(numel(snr_db_vec_global),num_of_packets_per_snr);
 ber_b_field = cell(1,numel(delay_spread));
 ber_a_field = cell(1,numel(delay_spread));
 
-for l=1:numel(delay_spread)
+for l=1:numel(N_Rx)
+    mac_meta_rx.N_Rx = N_Rx(l);
+    rx = dect_rx(mac_meta_rx, sync_options);
 
     parfor i=1:num_of_workers
             rcrc_err_cnt = 0; 
@@ -63,13 +64,13 @@ for l=1:numel(delay_spread)
             % create channel
             ch                      = lib_rf_channel.rf_channel();
             ch.verbose              = 0;
-            ch.type                 = 'deterministic';
+            ch.type                 = 'rayleigh';
             ch.amp                  = 1.0;
             ch.noise                = true;
             ch.snr_db             	= snr_db_vec_global(i);
             ch.samples_per_symbol   = tx.mac_meta.Oversampling;
             ch.N_TX                	= 1;
-            ch.N_RX               	= N_Rx;
+            ch.N_RX               	= N_Rx(l);
             ch.awgn_random_source   = 'global';
             ch.awgn_randomstream_seed 	= randi(1e9,[1 1]);
             ch.d_sto                = 0;
@@ -83,11 +84,11 @@ for l=1:numel(delay_spread)
             ch.r_samp_rate        	= tx.packet_data.SamplingRate;
             ch.r_max_doppler     	= 0;                            % 1.946 19.458
             ch.r_type   	        = 'TDL-i';
-            ch.r_DS_desired         = delay_spread(l);
+            ch.r_DS_desired         = delay_spread;
             ch.r_K                  = db2pow(9.0 + 0.00*randn(1,1));    %93e-9;
             ch.r_interpolation      = true;
             ch.r_gains_active 	    = true;
-            %ch.init_rayleigh_rician_channel();
+            ch.init_rayleigh_rician_channel();
         
             
             for k = 1:1:num_of_packets_per_snr
@@ -143,6 +144,7 @@ for l=1:numel(delay_spread)
     
     ber_b_field{l} = n_bits_b_z_field_error./n_bits_b_z_field_send;
     ber_a_field{l} = n_bits_a_field_error./n_bits_a_field_send;
+    delete(rx);
 end
 
 n_bits_a_field_send = zeros(num_of_workers,1);
