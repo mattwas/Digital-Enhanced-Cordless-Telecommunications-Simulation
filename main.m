@@ -12,6 +12,7 @@ mac_meta.N = 1;          % Radio fixed Part Number (RPN)
 mac_meta.s = 0;          % synchronization field (0 = normal length, 1 = prolonged)   
 mac_meta.z = 0;          % z-field indicator, for collision detection (0 = no Z field, 1 = Z Field active)
 mac_meta.Oversampling = 2; % oversampling
+mac_meta.code_rate = 0.33;
 mac_meta.transmission_type = "RFP"; % Transmission Type changes the sequence of the S-Field
 
 sync_options.timing_offset = false;
@@ -55,3 +56,5 @@ samples_antennas(:,4) = awgn_chan_2(samples_tx);
 biterr(tx.packet_data.a_field_bits, rx.packet_data.a_field_bits_rv)
 
 biterr(tx.packet_data.b_z_field_bits, rx.packet_data.b_z_field_bits_rv)
+
+biterr(tx.packet_data.b_field_data, rx.packet_data.b_field_user_bits_rv)

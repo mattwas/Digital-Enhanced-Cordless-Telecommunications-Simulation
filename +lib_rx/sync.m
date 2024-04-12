@@ -1,17 +1,22 @@
 function [start_of_packet, samples_after_sync] = sync(mac_meta, synchronisation, samples)
 % Synchronisation function for the Receiver. Output is the the Start of the
 % modulated S-Field
+
+N_Rx = mac_meta.N_Rx;
+configuration = mac_meta.Configuration;
 general_params = general.get_general_params(mac_meta);
-start_of_packet = zeros(1,mac_meta.N_Rx);
-samples_timing_synchronized = zeros(general_params.packet_size,mac_meta.N_Rx);
-samples_antenna_corrected = zeros(general_params.packet_size,mac_meta.N_Rx);
-if ~isequal(mac_meta.Configuration, '1a')
-    samples_antenna_corrected = zeros(general_params.packet_size/general_params.samples_per_symbol,mac_meta.N_Rx); 
+
+
+start_of_packet = zeros(1,N_Rx);
+samples_timing_synchronized = zeros(general_params.packet_size,N_Rx);
+samples_antenna_corrected = zeros(general_params.packet_size,N_Rx);
+if ~isequal(configuration, '1a')
+    samples_antenna_corrected = zeros(general_params.packet_size/general_params.samples_per_symbol,N_Rx); 
 end
 samples_after_sync = zeros(general_params.packet_size/general_params.samples_per_symbol,1);
 
 
-for i=1:mac_meta.N_Rx
+for i=1:N_Rx
 
     preamble_samples = phl_layer.preamble_seq(mac_meta);
 %% Timing Synchronisation
@@ -48,7 +53,7 @@ for i=1:mac_meta.N_Rx
     %% Carrier Frequency Offset Correction
     if synchronisation.frequency_offset == 1
 
-        if isequal(mac_meta.Configuration, '1a')
+        if isequal(configuration, '1a')
             error('CFO correction does not work with GMSK, it is corrected by the Viterbi');
         end
 
@@ -97,7 +102,7 @@ for i=1:mac_meta.N_Rx
 
         % apply Unshaping Filter
         samples_deshaped = phl_layer.dect_undo_pulse_shaping(samples_timing_synchronized(:,i), mac_meta);
-        if isequal(mac_meta.Configuration, '1a')
+        if isequal(configuration, '1a')
             samples_deshaped = samples_timing_synchronized(:,i);
         end
 
@@ -113,7 +118,7 @@ for i=1:mac_meta.N_Rx
     
     % for coherent detection we need to correct the phase ambiguity of the
     % samples by using the preamble as reference for the correction
-    if ~isequal(mac_meta.Configuration, '1a')
+    if ~isequal(configuration, '1a')
         preamble_samples = phl_layer.dect_undo_pulse_shaping(preamble_samples,mac_meta);
     end
     phase_offset = sum(samples_antenna_corrected(1:numel(preamble_samples),i).*conj(preamble_samples));
@@ -130,7 +135,7 @@ end
     %% Diversity
 
     
-    if mac_meta.N_Rx > 1
+    if N_Rx > 1
         if isequal(mac_meta.antenna_processing, 'Antenna Selection')
             samples_after_sync = lib_rx.antenna_selection(samples_antenna_corrected,mac_meta);
         elseif isequal(mac_meta.antenna_processing, 'Antenna Combining')

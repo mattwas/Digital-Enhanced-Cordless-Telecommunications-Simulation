@@ -1,9 +1,13 @@
 function [mod_struct] = configuration_to_mod_scheme(mac_meta)
+    configuration = mac_meta.Configuration;
+
+
+%%  Look up table for the DECT configuration    
     % look up table for the Configuration and Modulation Scheme according
     % to p. 47 PHL Layer
 
     % assumed that E/U mux is in U mode
-        switch mac_meta.Configuration
+        switch configuration
             case '1a'
                 s_field_modulation = 'GFSK';
                 a_field_bits_per_symbol = 1;

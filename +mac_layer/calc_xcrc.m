@@ -1,12 +1,14 @@
 function [b_x_field_bits] = calc_xcrc(b_field_bits,mac_meta)
    % assuming we are only transmitting with full slots at the moment
     mod_struct = general.configuration_to_mod_scheme(mac_meta);
+    b_z_field_bits_per_symbol = mod_struct.b_z_field_bits_per_symbol;
+
 
 
     % x-field size depends on level of modulation; x field size here refers
     % to the size of the crc and not the field
-    x_crc_size = mod_struct.b_z_field_bits_per_symbol*4;
-    if mod_struct.b_z_field_bits_per_symbol == 6
+    x_crc_size = b_z_field_bits_per_symbol*4;
+    if b_z_field_bits_per_symbol == 6
         x_crc_size = 16;
     end
 
@@ -14,16 +16,16 @@ function [b_x_field_bits] = calc_xcrc(b_field_bits,mac_meta)
 
         % full slot, which translates to paket format P32
         case "32"
-            test_bits_m = mod_struct.b_z_field_bits_per_symbol*84;
+            test_bits_m = b_z_field_bits_per_symbol*84;
             
             % number of test bits for 64-QAM is different
-            if mod_struct.b_z_field_bits_per_symbol == 6
+            if b_z_field_bits_per_symbol == 6
                 test_bits_m = 496;
             end
 
         % double slot, which translates to paket format P80 
         case "80"
-            switch mod_struct.b_z_field_bits_per_symbol
+            switch b_z_field_bits_per_symbol
                 case 1
                     test_bits_m = 164;
                 case 2
@@ -46,7 +48,7 @@ function [b_x_field_bits] = calc_xcrc(b_field_bits,mac_meta)
 
     % set the parameters for the test bits
 
-    delta_i = mod_struct.b_z_field_bits_per_symbol*240;
+    delta_i = b_z_field_bits_per_symbol*240;
 
     i_max = test_bits_m-1;
     r_polynomial = zeros(test_bits_m,1);
@@ -57,7 +59,7 @@ function [b_x_field_bits] = calc_xcrc(b_field_bits,mac_meta)
     %r_polynomial=r_polynomial.';
 
     % set the dividing polynomial according to Spec
-    switch mod_struct.b_z_field_bits_per_symbol
+    switch b_z_field_bits_per_symbol
         case 1
             divider_polynomial = 'z^4+1';
         case 2
@@ -88,7 +90,7 @@ function [b_x_field_bits] = calc_xcrc(b_field_bits,mac_meta)
     % for 64 QAM the true x field size is 24 bit, the rest has to be filled
     % with zeros
 
-    if mod_struct.b_z_field_bits_per_symbol == 6
+    if b_z_field_bits_per_symbol == 6
          b_x_field_bits(size_b_field_bits+x_crc_size+1:size_b_field_bits+x_crc_size+8) = zeros(8,1);
     end
 end
