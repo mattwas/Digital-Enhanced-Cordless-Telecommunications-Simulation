@@ -19,7 +19,7 @@ sync_options.timing_offset = false;
 sync_options.frequency_offset = false;
 
 mac_meta_rx = mac_meta;
-mac_meta_rx.N_Rx = 4;
+mac_meta_rx.N_Rx = 1;
 
 mac_meta_rx.antenna_processing = "Antenna Combining";
 
@@ -57,4 +57,4 @@ biterr(tx.packet_data.a_field_bits, rx.packet_data.a_field_bits_rv)
 
 biterr(tx.packet_data.b_z_field_bits, rx.packet_data.b_z_field_bits_rv)
 
-biterr(tx.packet_data.b_field_data, rx.packet_data.b_field_user_bits_rv)
+biterr(tx.packet_data.b_field_data, rx.packet_data.b_field_user_data_bits_rv)

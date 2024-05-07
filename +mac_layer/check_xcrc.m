@@ -78,6 +78,6 @@ function [b_field_without_x_bits,error] = check_xcrc(b_field_bits, mac_meta)
     if error == 0
         b_field_without_x_bits = b_field_bits(1:end-x_crc_size);
     else
-        b_field_without_x_bits = 0;
+        b_field_without_x_bits = [];
     end
 end
