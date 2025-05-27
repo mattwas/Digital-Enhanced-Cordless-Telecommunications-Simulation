@@ -1,8 +1,10 @@
-function [b_field_without_x_bits,error] = check_xcrc(b_field_bits, mac_meta)
-   % assuming we are only transmitting with full slots at the moment
-
+function [b_field_without_x_bits, error_crc] = check_xcrc(b_field_bits, mac_meta)
+    % check if the XCRC of the data part is correct
+    % assuming we are only transmitting with full slots at the moment
+%%
     mod_struct = general.configuration_to_mod_scheme(mac_meta);
 
+%%
     % x-field size depends on level of modulation; x field size here refers
     % to the size of the crc and not the field
     x_crc_size = mod_struct.b_z_field_bits_per_symbol*4;
@@ -35,14 +37,15 @@ function [b_field_without_x_bits,error] = check_xcrc(b_field_bits, mac_meta)
                 case 6
                     test_bits_m = 1216;
             end
+
         case "00"
             test_bits_m = 0;
             x_crc_size = 0;
     
     end
+ %% recreate the r-polynomial and check the checksum
 
     % set the parameters for the test bits
-
     delta_i = mod_struct.b_z_field_bits_per_symbol*240;
 
     i_max = test_bits_m-1;
@@ -51,11 +54,15 @@ function [b_field_without_x_bits,error] = check_xcrc(b_field_bits, mac_meta)
     for i=0:i_max-x_crc_size        % 0 < i < i_max - x according to standard
         r_polynomial(i+1) = b_field_bits(i+48*(1+floor(i/16))+1);
     end
+
+    % add the XCRC to the polynomial bits
+
     test_bits_plus_xcrc = [r_polynomial; b_field_bits(end-x_crc_size+1:end)];
 
     if mod_struct.b_z_field_bits_per_symbol == 6
         test_bits_plus_xcrc = [r_polynomial; b_field_bits(end-8-x_crc_size+1:end-8)];
     end
+
     switch mod_struct.b_z_field_bits_per_symbol
         case 1
             divider_polynomial = 'z^4+1';
@@ -68,16 +75,14 @@ function [b_field_without_x_bits,error] = check_xcrc(b_field_bits, mac_meta)
         otherwise
             error("invalid MOD Scheme");
     end
-    if ~isequal(test_bits_plus_xcrc,double.empty(0,0))
+
+    if ~isequal(test_bits_plus_xcrc, double.empty(0,0))
         crcdetector = comm.CRCDetector('Polynomial',divider_polynomial);
-        [~,error] = crcdetector(test_bits_plus_xcrc);
+        [~,error_crc] = crcdetector(test_bits_plus_xcrc);
     else
-        error = 1;
+        error_crc = 1;
     end
 
-    if error == 0
-        b_field_without_x_bits = b_field_bits(1:end-x_crc_size);
-    else
-        b_field_without_x_bits = [];
-    end
+    b_field_without_x_bits = b_field_bits(1:end-x_crc_size);
+
 end

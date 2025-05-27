@@ -17,8 +17,8 @@ function [samples_tx,SamplingRate] = dect_modulate(packet_data,mod_scheme, mac_m
             % expects more or less a continous bit stream where the first
             % bits will be delayed. So the resulting packet is not really
             % compliant to the Specification
-            % zero_bits = zeros(general_params.viterbi_traceback_depth,1);
-            zero_bits = randi([0 1], general_params.viterbi_traceback_depth,1);
+            zero_bits = zeros(general_params.viterbi_traceback_depth,1);
+            % zero_bits = randi([0 1], general_params.viterbi_traceback_depth,1);
             gfsk_bits = [gfsk_bits;zero_bits];
             gfsk_mod =  comm.GMSKModulator( ...
              'BitInput',true, ...

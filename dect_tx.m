@@ -34,6 +34,7 @@ classdef dect_tx < handle
 
             % generate B-Field bits
             if code_rate == 1
+
                 b_field_bits = randi([0 1], num_b_field_bits, 1);
                 b_field_data = b_field_bits;
             else
@@ -61,9 +62,6 @@ classdef dect_tx < handle
 
             [samples_tx, SamplingRate] = phl_layer.dect_modulate(packet_data_bits, mod_scheme_struct,mac_meta_arg);
             obj.packet_data.SamplingRate = SamplingRate;
-            
-            
-
 
         end
     end

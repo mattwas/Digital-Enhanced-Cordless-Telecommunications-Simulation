@@ -1,4 +1,5 @@
 function [mod_struct] = configuration_to_mod_scheme(mac_meta)
+
     configuration = mac_meta.Configuration;
 
 

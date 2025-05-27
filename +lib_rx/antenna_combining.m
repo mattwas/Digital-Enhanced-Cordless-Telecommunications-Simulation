@@ -1,5 +1,6 @@
 function [samples_combined] = antenna_combining(samples_antenna,mac_meta)
-N_Rx = mac_meta.N_Rx;
+%% Overlaps the received antenna streams
+    N_Rx = mac_meta.N_Rx;
 
 %% simple Antenna Combining
     samples_combined = zeros(numel(samples_antenna(:,1)),1);

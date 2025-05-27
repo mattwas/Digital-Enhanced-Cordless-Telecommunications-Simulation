@@ -1,6 +1,9 @@
 function [turbo_code_params] = turbo_code_params(mac_meta, size_of_b_field)
-%UNTITLED2 Summary of this function goes here
-%   Detailed explanation goes here
+%turbo_code_params sets parameters for convolutional code, interleaver and
+%puncturing
+%   The convolutional code itself is according to the Turbo Code specified
+%   the rest was created by myself because it would be to much work to
+%   implement the remainder, since it is not realy tested
     punc_pattern = mac_layer.adaptive_code_puncturing(mac_meta);
     puncturing_block_length = punc_pattern{1};
     num_of_punctures = punc_pattern{2};
@@ -9,19 +12,23 @@ function [turbo_code_params] = turbo_code_params(mac_meta, size_of_b_field)
     code_rate = mac_meta.code_rate;
     
 %% Convolutional Code
-
     trellis = poly2trellis(5,[37 25], 37); % trellis for conv coders in DECT spec
     n = log2(trellis.numOutputSymbols);
     mLen = log2(trellis.numStates);     % also refers to number of tail bits
     multiplying_rate = 0.75;            % multiplying rate needed to fit bits into the b-field    
     % blkLen is calculated 
     blkLen = ((size_of_b_field*(1/multiplying_rate)*multiplying_rate_adaptive_code_rate/(2*n))-mLen);
-
-%% INTERLEAVER
+    if abs(blkLen - round(blkLen)) > 1e-6
+        error('non-integer block length, turbo code not optimized yet')
+    end
+    % round blkLen
+    blkLen = round(blkLen);
+%% interleaver
     % Random Interleaver, DECT Inteleaver does not work at the Moment
     intrlv_state = 873426;
     ind_data = (1:1:blkLen)';
     intIndices  = randintrlv(ind_data, intrlv_state);
+
 %% Puncturing
     outindices = getTurboIOIndices(blkLen,n,mLen);
     if ~(code_rate == 0.33)
@@ -33,7 +40,6 @@ function [turbo_code_params] = turbo_code_params(mac_meta, size_of_b_field)
         outindices = reshape(outindices,[],1);
     end
 
-
 %%
     turbo_code_params.interleaver.indices = intIndices;
     turbo_code_params.interleaver.state = intrlv_state;
@@ -42,6 +48,8 @@ function [turbo_code_params] = turbo_code_params(mac_meta, size_of_b_field)
     turbo_code_params.useful_bits = blkLen;
 
 %% Interleaver function DECT
+
+    % WIP
 
     function [interleaver_ind] = inner_interleaving(size_useful_bits)
         

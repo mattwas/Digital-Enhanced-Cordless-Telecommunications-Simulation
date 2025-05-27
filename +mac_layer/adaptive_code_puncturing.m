@@ -1,22 +1,22 @@
 function [punc_pattern] = adaptive_code_puncturing(mac_meta)
-%UNTITLED Summary of this function goes here
-%   Detailed explanation goes here
-
+%code puncturing for the turbo coder to apply adaptive code rates
+%%
     code_rate = mac_meta.code_rate;
     mod_struct = general.configuration_to_mod_scheme(mac_meta);
     mod_scheme = mod_struct.b_z_field_modulation;
-    adaptive_code_rates = [1;0.8; 0.75; 0.6; 0.5; 0.4; 0.33];
+
+    adaptive_code_rates = [1; 0.8; 0.75; 0.6; 0.5; 0.4; 0.33];
     punc_pattern = cell(4,1);
     punc_vec = [];
     punc_block_length = [];
     num_of_punc = [];
     punc_adaptive_code_rate_diff = [];
+
     if ~ismember(mac_meta.code_rate, adaptive_code_rates)
-        error('code rate is not standard cb_field_bitsompliant');
+        error('code rate is not standard cb_field_bits compliant');
     end
    
-
-    %%
+%%
     switch code_rate
         case 0.4
             punc_vec = [5; 12];
@@ -44,11 +44,14 @@ function [punc_pattern] = adaptive_code_puncturing(mac_meta)
             punc_block_length = 24;
 
     end
+    
     if code_rate == 0.33
         punc_adaptive_code_rate_diff = 1;
+
     else
         punc_adaptive_code_rate_diff = punc_block_length/(punc_block_length-num_of_punc);
     end
+
     punc_pattern{1} = punc_block_length;
     punc_pattern{2} = num_of_punc;
     punc_pattern{3} = punc_vec;
