@@ -20,8 +20,6 @@ function [start_of_packet, samples_after_sync] = sync(mac_meta, synchronisation,
 
     %% Timing Synchronisation
         if synchronisation.timing_offset == 1
-    
-                
                 preamble_detector = comm.PreambleDetector('Preamble',preamble_samples, 'Detections','All',"Threshold",50);
                 [above_threshhold,metric] = preamble_detector(samples_rx(:,i));
             
@@ -34,34 +32,27 @@ function [start_of_packet, samples_after_sync] = sync(mac_meta, synchronisation,
                     start_of_packet(:,i) = 1;
                 end
             
-                
-    
         elseif synchronisation.timing_offset == 0
                 start_of_packet(:,i) = 1;
     
         else
             error('Option not viable');
+
         end
-    
     
         % synchronize the samples
         samples_timing_synchronized(:,i) = samples_rx(start_of_packet(i):start_of_packet(i)+general_params.packet_size-1, i);
     
-    
         %% Carrier Frequency Offset Correction
         if synchronisation.frequency_offset == 1
-    
             if isequal(configuration, '1a')
                 error('CFO correction does not work with GMSK, it is corrected by the Viterbi');
             end
-    
-    
-    
+
             coarse_cfo_correction = comm.CoarseFrequencyCompensator(...
                 "Modulation","QPSK",...
                 "SampleRate",general_params.SamplingRate/general_params.samples_per_symbol, ...
                 "FrequencyResolution",100);
-            
             
             carrier_sync = comm.CarrierSynchronizer(...
                 "Modulation","QPSK",...
@@ -94,10 +85,7 @@ function [start_of_packet, samples_after_sync] = sync(mac_meta, synchronisation,
             
             samples_antenna_corrected(:,i) = samples_fine_cfo;
     
-    
-    
         elseif synchronisation.frequency_offset == 0
-    
             % apply Unshaping Filter
             samples_deshaped = phl_layer.dect_undo_pulse_shaping(samples_timing_synchronized(:,i), mac_meta);
             if isequal(configuration, '1a')
@@ -106,14 +94,11 @@ function [start_of_packet, samples_after_sync] = sync(mac_meta, synchronisation,
     
             samples_antenna_corrected(:,i) = samples_deshaped;
     
-    
         else
             error('Option not viable');
-    
         end
     
-        %% Correct Phase Ambiguity
-        
+        %% Correct Phase Ambiguit
         % for coherent detection we need to correct the phase ambiguity of the
         % samples by using the preamble as reference for the correction
         if ~isequal(configuration, '1a')
@@ -129,14 +114,15 @@ function [start_of_packet, samples_after_sync] = sync(mac_meta, synchronisation,
         scatterplot(samples_antenna_corrected(:,2))
     end
     
-    
     %% Receiver Diversity
 
     if N_Rx > 1
         if isequal(mac_meta.antenna_processing, 'Antenna Selection')
             samples_after_sync = lib_rx.antenna_selection(samples_antenna_corrected,mac_meta);
+
         elseif isequal(mac_meta.antenna_processing, 'Antenna Combining')
             samples_after_sync = lib_rx.antenna_combining(samples_antenna_corrected,mac_meta);
+            
         else
             error("Receiver Antenna Processing not valid");
         end

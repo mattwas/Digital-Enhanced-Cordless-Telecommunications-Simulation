@@ -5,7 +5,7 @@ function [punc_pattern] = adaptive_code_puncturing(mac_meta)
     mod_struct = general.configuration_to_mod_scheme(mac_meta);
     mod_scheme = mod_struct.b_z_field_modulation;
 
-    adaptive_code_rates = [1; 0.8; 0.75; 0.6; 0.5; 0.4; 0.33];
+    adaptive_code_rates = [1; 0.8; 0.75; 0.6; 0.5; 0.4; 1/3];
     punc_pattern = cell(4,1);
     punc_vec = [];
     punc_block_length = [];

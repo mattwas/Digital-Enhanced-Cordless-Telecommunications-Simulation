@@ -16,6 +16,9 @@ function [num_t_field_bits,num_b_field_bits,num_x_field_bits] = calc_num_bits(ma
             b_field_base_size = 800;
         case '00'
             b_field_base_size = 0;
+            if mac_meta.code_rate ~= 1
+                error("code rate not available for P00 format");
+            end
         otherwise
             error('other packet formats not implemented yet');
     end
