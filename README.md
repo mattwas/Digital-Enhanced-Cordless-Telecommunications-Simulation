@@ -1,7 +1,7 @@
 # Digital Enhanced Cordless Telecommunications Link Level Simulation
 
 This repository provides a MATLAB-based link-level simulation of the Physical (PHY) and Medium Access Control (MAC) layers for the classic DECT (Digital Enhanced Cordless Telecommunications) standard (V2.9.1), including enhancements from DECT Evolution such as higher-order modulations (16QAM, 64QAM) and the channel coding.
-This repository was highly inspired by https://github.com/maxpenner/DECT-NR-Plus-Simulation and was designed to work with the same channel models.
+This repository was very much inspired by [DECT-NR-Plus-Simulation](https://github.com/maxpenner/DECT-NR-Plus-Simulation) and was designed to work with the same channel models.
 
 ## Features
 
@@ -13,9 +13,9 @@ This repository was highly inspired by https://github.com/maxpenner/DECT-NR-Plus
 
 **Transmitter and Receiver modeling**: A very basic synchronisation algorithm based on the preamble. Added receiver diversity modeling: Antenna Selection and Antenna Combining.
 
-**Flexible Channel Modeling**: Any Channel Model can be used. The current channel model wrapper is taken from: https://github.com/maxpenner/DECT-NR-Plus-Simulation 
+**Flexible Channel Modeling**: Any Channel Model can be used. The current channel model wrapper is taken from: [DECT-NR-Plus-Simulation](https://github.com/maxpenner/DECT-NR-Plus-Simulation).
 
-**Performance Metrics**: Calculates Bit Error Rate (BER) and Packet Error Rate (PER) versus Signal-to-Noise Ratio (SNR) for different fields (A-Field, B-Field).
+**Performance Metrics**: Calculates Bit Error Rate (BER) and Packet Error Rate (PER) versus Signal-to-Noise Ratio (SNR) for the data fields (A-Field and B-Field).
 
 ## Background
 
