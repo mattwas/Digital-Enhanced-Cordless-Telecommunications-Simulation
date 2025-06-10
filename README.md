@@ -1,4 +1,4 @@
-# Digital Enhanced Cordless Telecommunications Link Level Simulation
+# Digital Enhanced Cordless Telecommunications (DECT) link-level simulation
 
 This repository provides a MATLAB-based link-level simulation of the Physical (PHY) and Medium Access Control (MAC) layers for the classic DECT (Digital Enhanced Cordless Telecommunications) standard (V2.9.1), including enhancements from DECT Evolution such as higher-order modulations (16QAM, 64QAM) and the channel coding.
 This repository was very much inspired by [DECT-NR-Plus-Simulation](https://github.com/maxpenner/DECT-NR-Plus-Simulation) and was designed to work with the same channel models.
