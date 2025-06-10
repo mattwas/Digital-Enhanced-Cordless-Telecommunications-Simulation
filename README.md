@@ -39,9 +39,11 @@ There are two scripts provided:
 
 ## Example Plots
 
-    PER vs. SNR for B-Field and A-Field
+Here are some possible example plots shown were the performance is compared to DECT NR+.
 
-    BER vs. SNR for B-Field and A-Field
+![](gfx/100ns_n-1.pdf "Simulated packet error rates in a Rayleigh fading channel with one receving antenna.")
+
+![](gfx/100ns_n-2.pdf "Simulated packet error rates in a Rayleigh fading channel with two receving antennas.")
 
 ## To Do
 - implement B-Field interleaving which is specified to be used in conjunction to the channel coding for secured packets.
