@@ -154,4 +154,6 @@ legend("A-Field", "B-Field");
 xlim([0 40]);
 ylim([10e-6 1]);
 
+save("results\var_all.mat")
+
 
