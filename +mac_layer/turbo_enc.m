@@ -25,8 +25,10 @@ function [enc_data, data] = turbo_enc(mac_meta)
     X_k_interleaved(1:(K_new - K)) = X_k_padded(1:(K_new - K));
     X_k_interleaved((K_new - K) + 1:end) = X_k_padded(interleaver_idx((K_new - K) + 1:end));
     
-    rce1 = comm.ConvolutionalEncoder('TrellisStructure', trellis);
-    rce2 = comm.ConvolutionalEncoder('TrellisStructure', trellis);
+    rce1 = comm.ConvolutionalEncoder('TrellisStructure', trellis,...
+        'TerminationMethod', 'Truncated');
+    rce2 = comm.ConvolutionalEncoder('TrellisStructure', trellis, ...
+        'TerminationMethod', 'Truncated');
 
     rce1_out = rce1(X_k_padded);
 
@@ -36,6 +38,9 @@ function [enc_data, data] = turbo_enc(mac_meta)
     Y_k = rce1_out(2:2:end);
     Y_prime_k = rce2_out(2:2:end);
 
+    % save encoded padded bits
+    enc_padded_bits = [Y_k(1:(K_new - K)) Y_prime_k(1:(K_new - K))];
+
     % Puncture the added zeros
     Y_k(1:(K_new - K)) = [];
     Y_prime_k(1:(K_new - K)) = [];
@@ -44,15 +49,28 @@ function [enc_data, data] = turbo_enc(mac_meta)
 
     if mac_meta.code_rate ~= 1/3
         % calculate the puncturing indices
-        puncturing_vec_ = zeros(numel(puncturing_vec),numel(enc_data)/puncturing_block_length);
+
+        puncturing_blocks_int = floor(numel(enc_data)/puncturing_block_length);
         
-        k = 1:1:numel(enc_data)/puncturing_block_length;
+        puncturing_vec_ = zeros(numel(puncturing_vec),puncturing_blocks_int);
+        
+        k = 1:1:puncturing_blocks_int;
 
         puncturing_vec_(:,k) = puncturing_vec + (puncturing_block_length * (k-1));
 
-        puncturing_vec = reshape(puncturing_vec_,[],1);
+        puncturing_vec_ = reshape(puncturing_vec_,[],1);
 
-        enc_data(puncturing_vec) = [];
+        if mod(numel(enc_data), puncturing_block_length) ~= 0
+
+            puncturing_block_residual = (numel(enc_data)-puncturing_blocks_int * numel(puncturing_vec)) - K/mac_meta.code_rate;
+
+            k = 1:1:puncturing_block_residual;
+
+            puncturing_vec_(k + puncturing_blocks_int * numel(puncturing_vec)) = puncturing_vec(k) + (puncturing_block_length * (puncturing_blocks_int));
+        end
+        
+        % do the puncturing according to the index
+        enc_data(puncturing_vec_) = [];
     end
 
 end

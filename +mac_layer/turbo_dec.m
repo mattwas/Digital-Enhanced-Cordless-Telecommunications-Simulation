@@ -14,8 +14,9 @@ function [decoded_bits] = turbo_dec(mac_meta, enc_b_field_bits)
 
 %%
     % reverse mapping of the interleaver
-    deinterleaver_idx = zeros(length(interleaver_idx),1);
-    deinterleaver_idx(interleaver_idx) = 1:length(interleaver_idx);
+    deinterleaver_idx = zeros(K_new,1);
+    i = 1:K_new;
+    deinterleaver_idx(interleaver_idx(i)) = i;
 
     % Separate the encoded stream
     % Remember: encoded as [X_k; Y_k; Y'_k], reshape back
@@ -33,6 +34,8 @@ function [decoded_bits] = turbo_dec(mac_meta, enc_b_field_bits)
     Y_k_padded = [zeros(K_new - K, 1); Y_k];
     Y_prime_k_padded = [zeros(K_new - K, 1); Y_prime_k];
 
+    X_k_padded_interleaved = X_k_padded(interleaver_idx);
+
     % Setup APP decoders
     dec1 = comm.APPDecoder(...
         'TrellisStructure', trellis, ...
@@ -48,18 +51,32 @@ function [decoded_bits] = turbo_dec(mac_meta, enc_b_field_bits)
 
     % Initial LLRs
     L_a1 = zeros(K_new, 1);  % a priori info
+    
+    enc1_in = zeros(length(X_k_padded)*2,1);
+    enc1_in(1:2:end) = X_k_padded;
+    enc1_in(2:2:end) = Y_k_padded;
+
+    enc2_in = zeros(length(X_k_padded)*2,1);
+    enc2_in(1:2:end) = X_k_padded_interleaved;
+    enc2_in(2:2:end) = Y_prime_k_padded;
+
+    enc1_in_llr = 1 - 2 * enc1_in;  % 0 → +1, 1 → -1
+    enc2_in_llr = 1 - 2 * enc2_in;
+    enc1_in_llr(isnan(enc1_in_llr)) = 0;
+    enc2_in_llr(isnan(enc2_in_llr)) = 0;
+    % Y_prime_k_padded_llr = 1 - 2 * Y_prime_k_padded;
    
     num_iterations = 6;
     for i = 1:num_iterations
         % ---- Decoder 1 ----
-        L_e1 = dec1(X_k_padded + L_a1, Y_k_padded);
+        L_e1 = dec1(L_a1, enc1_in_llr);
         L_int = L_e1 - L_a1;
 
         % ---- Interleave ----
         L_int_interleaved = L_int(interleaver_idx);
 
         % ---- Decoder 2 ----
-        L_e2 = dec2(X_k_padded(interleaver_idx) + L_int_interleaved, Y_prime_k_padded);
+        L_e2 = dec2(L_int_interleaved, enc2_in_llr);
         L_int2 = L_e2 - L_int_interleaved;
 
         % ---- Deinterleave extrinsic info ----
@@ -81,18 +98,30 @@ function [decoded_bits] = turbo_dec(mac_meta, enc_b_field_bits)
         depunctured = NaN(total_length, 1);
 
         % Create puncturing pattern/ calculate the puncturing indices
-        puncturing_vec_ = zeros(numel(puncturing_vec),total_length/puncturing_block_length);
+
+        puncturing_blocks_int = floor(total_length/puncturing_block_length);
+        puncturing_vec_ = zeros(numel(puncturing_vec), puncturing_blocks_int);
         
-        k = 1:1:total_length/puncturing_block_length;
+        k = 1:1:puncturing_blocks_int;
 
         puncturing_vec_(:,k) = puncturing_vec + (puncturing_block_length * (k-1));
 
-        puncturing_vec = reshape(puncturing_vec_,[],1);
+        puncturing_vec_ = reshape(puncturing_vec_,[],1);
+
+        if mod(total_length, puncturing_block_length) ~= 0
+
+            puncturing_block_residual = (total_length-puncturing_blocks_int * numel(puncturing_vec)) - K/mac_meta.code_rate;
+
+            k = 1:1:puncturing_block_residual;
+
+            puncturing_vec_(k + puncturing_blocks_int * numel(puncturing_vec)) = puncturing_vec(k) + (puncturing_block_length * (puncturing_blocks_int));
+        end
 
         % Fill known values (non-punctured)
         depunctured_mask = true(total_length, 1);
-        depunctured_mask(puncturing_vec) = false;
+        depunctured_mask(puncturing_vec_) = false;
 
+        % set the unpunctured fields to the received bits
         depunctured(depunctured_mask) = bit_field;
 
         bit_field_depunctured = depunctured;

@@ -92,10 +92,10 @@ function [turbo_code_params] = turbo_code_params(mac_meta, size_of_b_field)
     turbo_code_params.puncturing.puncturing_vec = puncturing_vec;
 
 %% Interleaver function DECT
-    function [interleaver_idx] = inner_interleaving()
+    function [interleaver_idx, p] = inner_interleaving()
         s = 0;                                      % offset
         p = M_prime + 1;
-        k = 0:1:K_new-1;                            % p = constraint length (5) + 1
+        k = 0:1:K-1;                            % p = constraint length (5) + 1
         
         K_diff = K_new - K;
 
@@ -105,23 +105,43 @@ function [turbo_code_params] = turbo_code_params(mac_meta, size_of_b_field)
         % M_prime (in this case p = M_prime + 1)
         if mod(K, M_prime) == 0                     
             % check if K and p are relative prime 
-            if gcd(p,K) == 1
-                interleaver_idx(k+1) = mod(s + k * p, K) + 1;  % apply MATLABSHIFT (+1)
-
-            else
-                error('interleaver not working');
-
+                        % pick a p so K_new and p are coprime
+            while 1
+                if gcd(p, K_new) == 1
+                    break
+                else
+                    p = p + 1;
+                end
             end
+            interleaver_idx(k+1) = mod(s + k * p, K) + 1;  % apply MATLABSHIFT (+1)        
 
         else
+            % K_new is picked
+
+            % pick a p so K_new and p are coprime
+            while 1
+                if gcd(p, K_new) == 1
+                    break
+                else
+                    p = p + 1;
+                end
+            end
+
             % identity function for 0 < k < K_diff
             interleaver_idx(1:K_diff) = 1:K_diff;
 
             I(k+1) = mod(s + k * p, K) + 1;
 
-            interleaver_idx(K_diff+1:K_new) = K_diff + I(1:K_new-K_diff);
-
+            interleaver_idx(K_diff+1:K_new) = K_diff + I((K_diff+1:K_new) - K_diff);
         end
+
+        % Check if permutation is viable
+        for i = 1:K_new
+            if interleaver_idx(interleaver_idx==i) ~= i
+                error("interleaver idx is not a permutation")
+            end
+        end
+        
     end
 
 end
