@@ -3,7 +3,7 @@ clear all;
 
 %% Set the parameters for the packet
 
-mac_meta.Configuration = '1a' ; % Configuration according to PHL
+mac_meta.Configuration = '1b' ; % Configuration according to PHL
 mac_meta.a = '32';       % which physical packet are we using: '00' = short packet, '32' = basic packet, '00j' = low capacity packet, '80' = high capacity packet
 mac_meta.K = 0;          % in which slot (0 - 23) should the packet be transmitted
 mac_meta.L = 0;          % which half slot should be used for the packet (0 for first; 1 for second)

@@ -18,8 +18,8 @@ function [samples_out] = dect_pulse_shaping(samples_in, mac_meta)
 
     % power boost to bring the power to 1 (0 dB). The attentuation of the
     % filter is getting reversed
-    rms_after_filter = rms(samples_filtered);
-    samples_out = samples_filtered./rms_after_filter;
+    power_after_filter = power(rms(samples_filtered), 2);
+    samples_out = samples_filtered./ sqrt(power_after_filter);
 
     % for debugging
     % samples_out = samples_filtered;

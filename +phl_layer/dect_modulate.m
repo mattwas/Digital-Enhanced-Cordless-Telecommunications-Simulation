@@ -47,7 +47,7 @@ function [samples_tx,SamplingRate] = dect_modulate(packet_data,mod_scheme, mac_m
 
         case {"5", "6"}
 
-            % s and a field are fixed to pi/2 dbpsk
+            % s and a field are fixed to Pi/2-DBPSK
             s_field_data_samples = phl_layer.dect_dpsk_modulation(packet_data{1},1);
             a_field_data_samples = phl_layer.dect_dpsk_modulation(packet_data{2},mod_scheme.a_field_bits_per_symbol);
 
@@ -61,9 +61,9 @@ function [samples_tx,SamplingRate] = dect_modulate(packet_data,mod_scheme, mac_m
                 b_z_field_data_samples = [];
             end
 
-            samples_tx = [s_field_data_samples; a_field_data_samples;b_z_field_data_samples];
+            samples_tx = [s_field_data_samples; a_field_data_samples; b_z_field_data_samples];
 
-            samples_tx = phl_layer.dect_pulse_shaping(samples_tx,mac_meta);
+            samples_tx = phl_layer.dect_pulse_shaping(samples_tx, mac_meta);
             
         otherwise
             error("invalid Configuration");
