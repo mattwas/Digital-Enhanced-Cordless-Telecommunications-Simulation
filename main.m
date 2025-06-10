@@ -19,7 +19,7 @@ sync_options.timing_offset = false;
 sync_options.frequency_offset = false;
 
 mac_meta_rx = mac_meta;
-mac_meta_rx.N_Rx = 1;
+mac_meta_rx.N_Rx = 2;
 
 mac_meta_rx.antenna_processing = "Antenna Combining";
 

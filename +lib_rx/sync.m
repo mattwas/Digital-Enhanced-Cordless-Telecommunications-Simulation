@@ -6,8 +6,7 @@ function [start_of_packet, samples_after_sync] = sync(mac_meta, synchronisation,
     configuration = mac_meta.Configuration;
     general_params = general.get_general_params(mac_meta);
     
-    
-    start_of_packet = zeros(1,N_Rx);
+    start_of_packet = 0;
     samples_timing_synchronized = zeros(general_params.packet_size,N_Rx);
     samples_antenna_corrected = zeros(general_params.packet_size,N_Rx);
     if ~isequal(configuration, '1a')
@@ -26,14 +25,19 @@ function [start_of_packet, samples_after_sync] = sync(mac_meta, synchronisation,
                 % in case there are values above the treshhold
                 if numel(above_threshhold) >= 1 || numel(above_threshhold) == 0
                      start_of_packet(:,i) = find(metric >= max(metric))+1-numel(preamble_samples);
+
                 elseif numel(above_threshhold) == 1 
                     start_of_packet(:,i) = above_threshhold+1-numel(preamble_samples);
+
                 else
                     start_of_packet(:,i) = 1;
+
                 end
+
+                start_of_packet = start_of_packet(:, i);
             
         elseif synchronisation.timing_offset == 0
-                start_of_packet(:,i) = 1;
+                start_of_packet = 1;
     
         else
             error('Option not viable');
@@ -41,7 +45,7 @@ function [start_of_packet, samples_after_sync] = sync(mac_meta, synchronisation,
         end
     
         % synchronize the samples
-        samples_timing_synchronized(:,i) = samples_rx(start_of_packet(i):start_of_packet(i)+general_params.packet_size-1, i);
+        samples_timing_synchronized(:,i) = samples_rx(start_of_packet:start_of_packet+general_params.packet_size-1, i);
     
         %% Carrier Frequency Offset Correction
         if synchronisation.frequency_offset == 1
