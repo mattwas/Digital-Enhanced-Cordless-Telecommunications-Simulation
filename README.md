@@ -19,7 +19,7 @@ This repository was very much inspired by [DECT-NR-Plus-Simulation](https://gith
 
 ## Background
 
-DECT is a globally adopted standard for short-range wireless communication, used in cordless telephony and other applications. The classic DECT PHY uses GFSK and supports multiple access via FDMA/TDMA/TDD. DECT Evolution introduces higher-order modulations (such as 16QAM, 64QAM) and advanced channel coding for greater throughput and reliability14.
+DECT is a globally adopted standard for short-range wireless communication, used in cordless telephony and other applications. The classic DECT PHY uses GFSK and supports multiple access via FDMA/TDMA/TDD. DECT Evolution introduces higher-order modulations (such as 16QAM, 64QAM) and advanced channel coding for greater throughput and reliability.
 
 ## Usage
 
