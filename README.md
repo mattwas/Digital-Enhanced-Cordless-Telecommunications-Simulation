@@ -39,11 +39,9 @@ There are two scripts provided:
 
 ## Example Plots
 
-Here are some possible example plots shown were the performance is compared to DECT NR+.
+Here are some possible example plots:
 
-![](gfx/100ns_n-1.svg "Simulated packet error rates in a Rayleigh fading channel with one receving antenna.")
-
-![](gfx/100ns_n-2.svg "Simulated packet error rates in a Rayleigh fading channel with two receving antennas.")
+![](gfx/per_all_modes.svg "Simulated packet error rates in a Rayleigh fading channel with one receving antenna.")
 
 ## To Do
 - implement B-Field interleaving which is specified to be used in conjunction to the channel coding for secured packets.
