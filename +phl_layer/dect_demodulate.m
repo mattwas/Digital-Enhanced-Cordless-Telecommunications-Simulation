@@ -8,16 +8,25 @@ function [a_field_bits_rv,b_z_field_bits_rv] = dect_demodulate(samples,mac_meta,
     switch mac_meta.Configuration
         case "1a"
                 size_z_field = mac_meta.z*4;
-                GFSK_demod = comm.GMSKDemodulator( ...
-                'BitOutput',true, ...
-                'BandwidthTimeProduct',0.5, ...
-                'PulseLength',general_params.gauss_length, ...
-                'SamplesPerSymbol',general_params.samples_per_symbol,...
-                "TracebackDepth",general_params.viterbi_traceback_depth);
-
-                bits_rv = GFSK_demod(samples);
-                tracebackBits = GFSK_demod.TracebackDepth;
-                bits_rv(1:tracebackBits)=[];
+                sps = general_params.samples_per_symbol;
+            
+                switch mac_meta.gfsk_receiver          % "viterbi" or "iad"
+                    case "viterbi"
+                        GFSK_demod = comm.GMSKDemodulator( ...
+                            'BitOutput',true, ...
+                            'BandwidthTimeProduct',0.5, ...
+                            'PulseLength',general_params.gauss_length, ...
+                            'SamplesPerSymbol',sps, ...
+                            "TracebackDepth",general_params.viterbi_traceback_depth);
+                        bits_rv = GFSK_demod(samples);
+                        bits_rv(1:GFSK_demod.TracebackDepth) = [];
+            
+                    case "iad"
+                        bits_rv = gfsk_iad_demod(samples, sps, general_params.iad_offset);
+            
+                    otherwise
+                        error("invalid gfsk_receiver");
+                end
                 a_field_bits_rv = bits_rv(synchronisation.packet_start+general_params.s_field_size:synchronisation.packet_start-1+general_params.s_field_size+size_t_field_bits+general_params.a_field.header+general_params.a_field.size_rcrc);
                 b_z_field_bits_rv = bits_rv(synchronisation.packet_start-1+general_params.s_field_size+size_t_field_bits+general_params.a_field.header+general_params.a_field.size_rcrc+1:(synchronisation.packet_start-1+general_params.s_field_size+size_t_field_bits+general_params.a_field.header+general_params.a_field.size_rcrc)+size_b_field_bits+size_x_field_bits+size_z_field);
         case {"1b", "2", "2b", "3", "3b", "4a", "4b"}
@@ -112,4 +121,13 @@ function [a_field_bits_rv,b_z_field_bits_rv] = dect_demodulate(samples,mac_meta,
     end
 
             
+end
+
+function bits = gfsk_iad_demod(x, sps, off)
+    % limiter-discriminator: phase increment per sample (amplitude-independent)
+    d = [0; angle(x(2:end) .* conj(x(1:end-1)))];
+    % integrate & dump over one symbol, starting 'off' samples into the burst
+    K = floor((numel(d) - off) / sps);
+    d = d(off+1 : off+K*sps);
+    bits = double(sum(reshape(d, sps, K), 1).' > 0);   % bit 1 -> positive frequency
 end

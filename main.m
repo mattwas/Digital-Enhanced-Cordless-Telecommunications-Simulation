@@ -3,7 +3,7 @@ clear all;
 
 %% Set the parameters for the packet
 
-mac_meta.Configuration = '1b' ; % Configuration according to PHL
+mac_meta.Configuration = '1a' ; % Configuration according to PHL
 mac_meta.a = '32';       % which physical packet are we using: '00' = short packet, '32' = basic packet, '00j' = low capacity packet, '80' = high capacity packet
 mac_meta.K = 0;          % in which slot (0 - 23) should the packet be transmitted
 mac_meta.L = 0;          % which half slot should be used for the packet (0 for first; 1 for second)
@@ -12,14 +12,16 @@ mac_meta.N = 1;          % Radio fixed Part Number (RPN)
 mac_meta.s = 0;          % synchronization field (0 = normal length, 1 = prolonged)   
 mac_meta.z = 0;          % z-field indicator, for collision detection (0 = no Z field, 1 = Z Field active)
 mac_meta.Oversampling = 2; % oversampling
-mac_meta.code_rate = 0.75;
+mac_meta.code_rate = 1;%0.75;
 mac_meta.transmission_type = "RFP"; % Transmission Type changes the sequence of the S-Field
 
 sync_options.timing_offset = false;
 sync_options.frequency_offset = false;
 
+mac_meta.gfsk_receiver = "iad"; % or iad
+
 mac_meta_rx = mac_meta;
-mac_meta_rx.N_Rx = 2;
+mac_meta_rx.N_Rx = 1;
 
 mac_meta_rx.antenna_processing = "Antenna Combining";
 

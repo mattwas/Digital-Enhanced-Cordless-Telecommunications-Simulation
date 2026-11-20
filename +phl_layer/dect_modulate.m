@@ -12,20 +12,38 @@ function [samples_tx,SamplingRate] = dect_modulate(packet_data,mod_scheme, mac_m
     switch mac_meta.Configuration
         case "1a"
             gfsk_bits = [packet_data{1}; packet_data{2}; packet_data{3}];
+            L = general_params.gauss_length;
+            mk = comm.GMSKModulator( ...
+                'BitInput',true, ...
+                'BandwidthTimeProduct',0.5, ...
+                'PulseLength',L, ...
+                'SamplesPerSymbol',samples_per_symbol);
+        
+            % add the tail
+            y_p = mk([gfsk_bits; ones(L-1,1)]);   % extra +1 symbols
+            reset(mk);
+            y_m = mk([gfsk_bits; zeros(L-1,1)]);  % extra -1 symbols
+        
+            phi = (unwrap(angle(y_p)) + unwrap(angle(y_m)))/2;  % extra symbols cancel
+            samples_tx = exp(1j*phi);   % (n_bits + L-1)*sps samples: burst + tail
+    
+            % append the TracebackDepth for the receiver
+            samples_tx = [samples_tx; zeros(general_params.viterbi_traceback_depth*samples_per_symbol, size(samples_tx,2))];
 
-            % the packet has to be prolonged, because the Viterbi in the GMSKDemodulator
-            % expects more or less a continous bit stream where the first
-            % bits will be delayed. So the resulting packet is not really
-            % compliant to the Specification
-            zero_bits = zeros(general_params.viterbi_traceback_depth,1);
-            % zero_bits = randi([0 1], general_params.viterbi_traceback_depth,1);
-            gfsk_bits = [gfsk_bits;zero_bits];
-            gfsk_mod =  comm.GMSKModulator( ...
-             'BitInput',true, ...
-             'BandwidthTimeProduct',0.5, ...
-             'PulseLength',general_params.gauss_length, ...
-             'SamplesPerSymbol',samples_per_symbol);
-            samples_tx = gfsk_mod(gfsk_bits);
+            % % reference: plain GMSK modulator, data bits only, no tail
+            % ref = comm.GMSKModulator( ...
+            %     'BitInput',true, ...
+            %     'BandwidthTimeProduct',0.5, ...
+            %     'PulseLength',L, ...
+            %     'SamplesPerSymbol',samples_per_symbol);
+            % y_ref = ref(gfsk_bits);
+            % 
+            % N = numel(y_ref);                         % = numel(gfsk_bits)*sps
+            % max(abs(samples_tx(1:N) - y_ref))         % expect ~1e-15 (burst identical)
+            % numel(samples_tx) - N                     % expect (L-1)*sps (tail length)
+            % 
+            % plot(unwrap(angle(samples_tx))); hold on
+            % plot(unwrap(angle(y_ref)),'--'); xline(N);  % curves overlap up to N, then the tail flattens
 
         case {"1b", "2", "2b", "3", "3b", "4a", "4b"}
 

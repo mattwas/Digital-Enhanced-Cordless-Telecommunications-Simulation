@@ -13,9 +13,13 @@ function [general_params] = get_general_params(mac_meta)
     general_params.SymbolRate = 480/(0.01/24);
     general_params.raised_cosine_length_symbols = 10;
     general_params.gauss_length = 4;
-    general_params.viterbi_traceback_depth = 20;
     general_params.samples_per_symbol = 1*oversampling;
     general_params.SamplingRate = general_params.SymbolRate*general_params.samples_per_symbol;
+
+    % GFSK Demod
+    % general_params.gfsk_receiver = "viterbi";   % or "iad"
+    general_params.viterbi_traceback_depth = 20;
+    general_params.iad_offset = round((general_params.gauss_length-1) * general_params.samples_per_symbol / 2) + 1;   % = 4 for L=4, sps=2
 
     % size of parameters in A-Field (fixed)
     general_params.a_field.header = 8;
