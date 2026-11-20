@@ -44,7 +44,6 @@ Here are some possible example plots:
 ![](gfx/per_all_modes.svg "Simulated packet error rates in a Rayleigh fading channel with one receving antenna.")
 
 ## To Do
-- implement B-Field interleaving which is specified to be used in conjunction to the channel coding for secured packets.
 - improve synchronisation
 
 ## References
