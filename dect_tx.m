@@ -43,6 +43,13 @@ classdef dect_tx < handle
             obj.packet_data.b_field_bits = b_field_bits;
             obj.packet_data.b_field_data = b_field_data;
 
+            % B-Field binary interleaving of the protected (encoded and
+            % punctured) B-Field, Annex I.4 MAC Layer
+            if obj.mac_meta.code_rate ~= 1
+                interleaver_idx = mac_layer.b_field_interleaver_idx(obj.mac_meta, numel(b_field_bits));
+                b_field_bits = b_field_bits(interleaver_idx);
+            end
+
             % scramble B-Field and add XCRC and RCRC
             a_field_bits = mac_layer.calc_rcrc(a_field_h_t_bits);
             obj.packet_data.a_field_bits = a_field_bits;

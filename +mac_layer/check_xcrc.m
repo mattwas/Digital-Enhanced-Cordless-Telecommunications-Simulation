@@ -83,6 +83,11 @@ function [b_field_without_x_bits, error_crc] = check_xcrc(b_field_bits, mac_meta
         error_crc = 1;
     end
 
-    b_field_without_x_bits = b_field_bits(1:end-x_crc_size);
+    % for 64 QAM the x field is 24 bits (16 bit XCRC + 8 zero padding bits)
+    if mod_struct.b_z_field_bits_per_symbol == 6
+        b_field_without_x_bits = b_field_bits(1:end-x_crc_size-8);
+    else
+        b_field_without_x_bits = b_field_bits(1:end-x_crc_size);
+    end
 
 end

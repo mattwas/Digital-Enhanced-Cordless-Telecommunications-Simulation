@@ -48,6 +48,14 @@ classdef dect_rx < handle
                 [b_bits_rv, error_xcrc] = mac_layer.check_xcrc(b_field_bits_rv,obj.mac_meta);
 
                 b_bits_data_unscrambled_rv = mac_layer.scramble_b_field(0, b_bits_rv);
+
+                % B-Field binary deinterleaving, Annex I.4 MAC Layer
+                if obj.mac_meta.code_rate ~= 1
+                    interleaver_idx = mac_layer.b_field_interleaver_idx(obj.mac_meta, numel(b_bits_data_unscrambled_rv));
+                    b_bits_deinterleaved_rv = zeros(size(b_bits_data_unscrambled_rv));
+                    b_bits_deinterleaved_rv(interleaver_idx) = b_bits_data_unscrambled_rv;
+                    b_bits_data_unscrambled_rv = b_bits_deinterleaved_rv;
+                end
                 obj.packet_data.b_field_bits_rv = b_bits_data_unscrambled_rv;
 
                 % Turbo decoder
